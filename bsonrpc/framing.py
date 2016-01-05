@@ -47,11 +47,14 @@ class JsonFrameless(object):
 
     @classmethod
     def extract_message(cls, raw_bytes):
+        # A bit of leeway to allow whitespace between messages
+        raw_bytes = raw_bytes.lstrip()
         if len(raw_bytes) < 2:
             return None, raw_bytes
         if raw_bytes[0] != 123:
-            raise FramingError('JSON Object required.')
-        stack = [123]  # {
+            raise FramingError(
+                'Broken state. Expected JSON Object, got: %s' % raw_bytes)
+        stack = [123]
         uniesc = 0
         poppers = {91: [93], 123: [125], 34: [34]}
         adders = {91: [34, 91, 123], 123: [34, 91, 123], 34: [92], 92: [117]}
