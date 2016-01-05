@@ -49,7 +49,7 @@ class JsonFrameless(object):
     def extract_message(cls, raw_bytes):
         if len(raw_bytes) < 2:
             return None, raw_bytes
-        if not raw_bytes.startswith(b'{'):
+        if raw_bytes[0] != 123:
             raise FramingError('JSON Object required.')
         stack = [123]  # {
         uniesc = 0
