@@ -1,0 +1,54 @@
+
+**concurrent_notification_handling**
+  Affects by which strategy each notification handler will be launched
+  to handle each notification. See `About Threading Model`_ for more info.
+  Choices:
+
+  * ``None`` (Default)
+  * ``bsonrpc.ThreadingModel.THREADS``
+  * ``bsonrpc.ThreadingModel.GEVENT``
+
+**concurrent_request_handling**
+  Affects by which strategy each request handler will be launched
+  to handle each request. See `About Threading Model`_ for more info.
+  Choices:
+
+  * ``None``,
+  * ``bsonrpc.ThreadingModel.THREADS`` (Default)
+  * ``bsonrpc.ThreadingModel.GEVENT``
+
+**connection_id**
+  Label to use in logs to identify current connection. Default: ''
+
+**id_generator**
+  A generator which must yield a unique ID on each next()-call.
+  Used for generating ID's for request messages.
+  Default: internal default generator yielding integers 1, 2, ...
+
+**no_arguments_presentation**
+  When RPC method is to be sent without arguments the JSON RPC 2.0 specification
+  specifies that the ``params``-key in the message MAY be omitted. However
+  because this is not a strict requirement, an empty JSON Array or empty
+  JSON Object are equally valid presentations of an empty argument collection.
+  Choices:
+
+  * ``bsonrpc.NoArgumentsPresentation.OMIT`` (Default)
+  * ``bsonrpc.NoArgumentsPresentation.EMPTY_ARRAY``
+  * ``bsonrpc.NoArgumentsPresentation.EMPTY_OBJECT``
+
+  This option affects only the structure of sent JSON messages. All valid
+  schematic variations for incoming messages are recognized correctly regardless
+  of this setting.
+
+**threading_model**
+  Affects the concurrency implementation of the internal
+  dispatcher and message stream decoder.
+  See `About Threading Model`_ for more info
+  Choices:
+
+  * ``bsonrpc.ThreadingModel.THREADS`` (Default)
+  * ``bsonrpc.ThreadingModel.GEVENT``
+
+
+All options as well as any possible custom/extra options are
+available as attributes of the constructed class object.
