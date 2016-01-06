@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 '''
 from .concurrent import new_queue, spawn
@@ -62,8 +63,8 @@ class JsonCodec(object):
     def dumps(self, msg):
         try:
             return bytes(
-                    self._dumps(msg, separators=(',', ':'), sort_keys=True),
-                    'utf-8')
+                self._dumps(msg, separators=(',', ':'), sort_keys=True),
+                'utf-8')
         except Exception as e:
             raise EncodingError(e)
 
