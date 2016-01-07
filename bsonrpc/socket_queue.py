@@ -9,7 +9,7 @@ from queue import Empty
 from struct import unpack
 
 
-class BsonCodec(object):
+class BSONCodec(object):
 
     def __init__(self):
         import bson
@@ -37,7 +37,7 @@ class BsonCodec(object):
             if rb_len < msg_len:
                 return None, raw_bytes
             else:
-                return raw_bytes[:rb_len], raw_bytes[rb_len:]
+                return raw_bytes[:msg_len], raw_bytes[msg_len:]
         except Exception as e:
             raise FramingError(e)
 
@@ -45,7 +45,7 @@ class BsonCodec(object):
         return message_bytes
 
 
-class JsonCodec(object):
+class JSONCodec(object):
 
     def __init__(self, extractor, framer):
         import json

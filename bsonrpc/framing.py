@@ -4,7 +4,7 @@
 from .exceptions import FramingError
 
 
-class JsonFramingRFC7464(object):
+class JSONFramingRFC7464(object):
 
     @classmethod
     def extract_message(cls, raw_bytes):
@@ -27,7 +27,7 @@ class JsonFramingRFC7464(object):
         return b'\x1e' + message_bytes + b'\x0a'
 
 
-class JsonFramingNetstring(object):
+class JSONFramingNetstring(object):
 
     @classmethod
     def extract_message(cls, raw_bytes):
@@ -57,7 +57,7 @@ class JsonFramingNetstring(object):
         return bytes(str(msg_len), 'utf-8') + b':' + message_bytes + b','
 
 
-class JsonFramingNone(object):
+class JSONFramingNone(object):
 
     @classmethod
     def extract_message(cls, raw_bytes):
@@ -87,6 +87,8 @@ class JsonFramingNone(object):
                 if uniesc >= 4:
                     stack = stack[:-2]
                     uniesc = 0
+        if not stack:
+            return raw_bytes, b''
         return None, raw_bytes
 
     @classmethod
