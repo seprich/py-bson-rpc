@@ -61,8 +61,6 @@ class JSONFramingNone(object):
 
     @classmethod
     def extract_message(cls, raw_bytes):
-        # A bit of leeway to allow whitespace between messages
-        raw_bytes = raw_bytes.lstrip()
         if len(raw_bytes) < 2:
             return None, raw_bytes
         if raw_bytes[0] != 123:
