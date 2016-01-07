@@ -73,8 +73,6 @@ class JSONFramingNone(object):
         poppers = {91: [93], 123: [125], 34: [34]}
         adders = {91: [34, 91, 123], 123: [34, 91, 123], 34: [92], 92: [117]}
         for idx in range(1, len(raw_bytes)):
-            if not stack:
-                return raw_bytes[:idx], raw_bytes[idx:]
             cbyte = raw_bytes[idx]
             if cbyte in poppers.get(stack[-1], []):
                 stack.pop()
@@ -87,8 +85,8 @@ class JSONFramingNone(object):
                 if uniesc >= 4:
                     stack = stack[:-2]
                     uniesc = 0
-        if not stack:
-            return raw_bytes, b''
+            if not stack:
+                return raw_bytes[:(idx + 1)], raw_bytes[(idx + 1):]
         return None, raw_bytes
 
     @classmethod
