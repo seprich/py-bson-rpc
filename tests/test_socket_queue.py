@@ -62,12 +62,9 @@ def test_codec_exceptions(codec):
         codec.loads(raw_msg)
     raw_msg, raw_bytes = codec.extract_message(raw_bytes)
     assert codec.loads(raw_msg) == msg1
-    # bson dumps just silently omits non-encodable entities...
-    # -> https://github.com/py-bson/bson/issues/36
-    if not isinstance(codec, BSONCodec):
-        impossible = {'jsonrpc': '2.0', 'id': '99', 'method': test_codec}
-        with pytest.raises(EncodingError):
-            codec.dumps(impossible)
+    impossible = {'jsonrpc': '2.0', 'id': '99', 'method': test_codec}
+    with pytest.raises(EncodingError):
+        codec.dumps(impossible)
 
 
 # TODO: Test the SocketQueue

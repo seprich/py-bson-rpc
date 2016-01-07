@@ -12,9 +12,10 @@ from struct import unpack
 class BSONCodec(object):
 
     def __init__(self):
+        # NOTE: From pymongo, not the `bson` 3rd party lib.
         import bson
-        self._loads = bson.loads
-        self._dumps = bson.dumps
+        self._loads = bson.BSON.decode
+        self._dumps = bson.BSON.encode
 
     def loads(self, b_msg):
         try:
