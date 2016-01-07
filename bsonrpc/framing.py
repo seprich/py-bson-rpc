@@ -86,7 +86,7 @@ class JSONFramingNone(object):
                     stack = stack[:-2]
                     uniesc = 0
             if not stack:
-                return raw_bytes[:(idx + 1)], raw_bytes[(idx + 1):]
+                return raw_bytes[:idx + 1], raw_bytes[idx + 1:]
         return None, raw_bytes
 
     @classmethod
