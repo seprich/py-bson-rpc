@@ -4,6 +4,9 @@ A python library for JSON-RPC 2.0 and BSON-RPC on sockets (TCP & TCP+TLS).
 
 **Under development**
 
+| [API doc](http://seprich.github.io/py-bson-rpc/index.html)
+|
+
 ## Features
 
 #### JSON-RPC 2.0
