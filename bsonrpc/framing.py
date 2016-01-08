@@ -1,10 +1,54 @@
 # -*- coding: utf-8 -*-
 '''
+This module provides classes implementing different JSON-RPC 2.0 framing
+options. Currently RFC-7464, Netstring and Frameless -framings are provided.
+
+In case you need to use a different framing method, you can provide your own
+implementor class for this library via settings.
+
+The class you provide must have the following classmethods and behavior:
+  * ``extract_message``
+      .. code-block:: python
+
+        @classmethod
+        def extract_message(cls, raw_bytes)
+            # Args:
+            #    raw_bytes (bytes): 1 - N bytes from stream
+            # Returns:
+            #    bytes, bytes    (tuple of 2 byte strings)
+            #       * (None, raw_bytes,) == raw_bytes contains only a partial
+            #                               message.
+            #       * (msg_bytes, rest,) == a complete message +
+            #                               remaining bytes.
+            # Raises:
+            #    Any type of exception can be raised on a framing error.
+            #    Library framework will coerce these into
+            #    bsonrpc.exceptions.FramingError -exceptions however.
+            return msg_bytes, rest_bytes
+  * ``into_frame``
+      .. code-block:: python
+
+        @classmethod
+        def into_frame(cls, message_bytes):
+            # Args:
+            #    message_bytes (bytes): 1 complete JSON message serialized
+            #                           into bytes.
+            # Returns:
+            #    bytes
+            #       == framed message.
+            # Raises:
+            #    Theoretically framing method could limit message size and
+            #    message_bytes may be too long -> causing an error ->
+            #    coerced to bsonrpc.exceptions.FramingError
+            return framed_bytes
 '''
 from .exceptions import FramingError
 
 
 class JSONFramingRFC7464(object):
+    '''
+    RFC-7464 framing.
+    '''
 
     @classmethod
     def extract_message(cls, raw_bytes):
@@ -28,6 +72,9 @@ class JSONFramingRFC7464(object):
 
 
 class JSONFramingNetstring(object):
+    '''
+    Netstring framing.
+    '''
 
     @classmethod
     def extract_message(cls, raw_bytes):
@@ -58,6 +105,9 @@ class JSONFramingNetstring(object):
 
 
 class JSONFramingNone(object):
+    '''
+    Direct streaming without framing.
+    '''
 
     @classmethod
     def extract_message(cls, raw_bytes):

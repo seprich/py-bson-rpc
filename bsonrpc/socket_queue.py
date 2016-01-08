@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
+JSON & BSON codecs and the SocketQueue class which uses them.
 '''
 from .concurrent import new_queue, spawn
 from .exceptions import (
@@ -10,6 +11,17 @@ from struct import unpack
 
 
 class BSONCodec(object):
+    '''
+    Encode/Decode message to/from BSON format.
+
+    Pros:
+      * Explicit type for binary data
+          * No string piggypacking.
+          * No size penalties.
+      * Explicit type for datetime.
+    Cons:
+      * No top-level arrays -> no batch support.
+    '''
 
     def __init__(self):
         # NOTE: From pymongo, not the `bson` 3rd party lib.
@@ -47,6 +59,9 @@ class BSONCodec(object):
 
 
 class JSONCodec(object):
+    '''
+    Encode/Decode messages to/from JSON format.
+    '''
 
     def __init__(self, extractor, framer):
         import json
@@ -83,10 +98,25 @@ class JSONCodec(object):
 
 
 class SocketQueue(object):
+    '''
+    SocketQueue is a duplex Queue connected to a given socket and
+    internally takes care of the conversion chain:
+
+        socket <-> raw-binary <-> codec <-> python data objects <-> queue
+    '''
 
     BUFSIZE = 4096
 
     def __init__(self, socket, codec, threading_model):
+        '''
+        :param socket: Socket connected to rpc peer node.
+        :type socket: socket.socket
+        :param codec: Codec converting python data to/from binary data
+        :type codec: BSONCodec or JSONCodec
+        :param threading_model: Threading model
+        :type threading_model: bsonrpc.options.ThreadingModel.GEVENT or
+                               bsonrpc.options.ThreadingModel.THREADS
+        '''
         self.socket = socket
         self.codec = codec
         self.from_socket_queue = new_queue(threading_model)
@@ -100,25 +130,49 @@ class SocketQueue(object):
 
     @property
     def is_closed(self):
+        '''
+        :property: bool -- Whether this queue has been closed or not.
+        '''
         return self._closed
 
     def close(self):
+        '''
+        Close this queue and the underlying socket.
+        '''
         self._run_sender = False
         self.socket.close()
         self._closed = True
 
     def empty(self):
+        '''
+        :returns: bool -- Empty if there is no items to get from this
+                          SocketQueue.
+        '''
         return self.from_socket_queue.empty()
 
-    def put(self, *args, **kwargs):
-        if self._closed:
-            raise ClosedError('Queue is closed. Cannot send more items.')
-        self.to_socket_queue.put(*args, **kwargs)
+    def put(self, item):
+        '''
+        Put item to queue -> codec -> socket.
 
-    def get(self, **kwargs):
+        :param item: Message object.
+                     (Giving ``None`` closes sending - this is to be avoided.)
+        :type item: dict, list or None
+        '''
+        if self._closed or not self._run_sender:
+            raise ClosedError('Queue is closed. Cannot send more items.')
+        self.to_socket_queue.put(item)
+
+    def get(self):
+        '''
+        Get message items  <- codec <- socket.
+
+        :returns: Normally a message object (python dict or list) but
+                  if socket is closed by peer and queue is drained then
+                  ``None`` is returned.
+        '''
         if self._drained:
             return None
-        obj = self.from_socket_queue.get(**kwargs)
+        obj = self.from_socket_queue.get()
         if obj is None:
             self._drained = True
         return obj
