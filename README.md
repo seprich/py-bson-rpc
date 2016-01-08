@@ -19,8 +19,8 @@ This library works upon python
 [`socket.socket`](https://docs.python.org/3.4/library/socket.html)
 or anything which
 [squawks](https://en.wikipedia.org/wiki/Duck_typing) like a socket.
-Specifically this library uses `send`, `recv` and `close` methods of the
-given socket.
+Specifically this library uses `close`, `recv`, `sendall` and `shutdown`
+methods of the given socket.
 
 The creation of server sockets, accepting client connections or connecting to
 servers and all kind of connection management is left outside of this library

@@ -41,3 +41,20 @@ def new_queue(threading_model, *args, **kwargs):
         return _new_gevent_queue(*args, **kwargs)
     elif threading_model == ThreadingModel.THREADS:
         return _new_queue(*args, **kwargs)
+
+
+def _new_thread_lock(*args, **kwargs):
+    from threading import Lock
+    return Lock(*args, **kwargs)
+
+
+def _new_gevent_lock(*args, **kwargs):
+    from gevent.lock import Semaphore
+    return Semaphore(*args, **kwargs)
+
+
+def new_lock(threading_model, *args, **kwargs):
+    if threading_model == ThreadingModel.GEVENT:
+        return _new_gevent_lock(*args, **kwargs)
+    elif threading_model == ThreadingModel.THREADS:
+        return _new_thread_lock(*args, **kwargs)

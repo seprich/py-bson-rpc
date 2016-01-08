@@ -3,12 +3,6 @@
 '''
 
 
-class ClosedError(RuntimeError):
-    '''
-    Queue/Socket closed
-    '''
-
-
 class CodecError(RuntimeError):
     '''
     Common base for framing and codec errors.

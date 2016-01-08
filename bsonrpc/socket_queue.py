@@ -2,11 +2,9 @@
 '''
 JSON & BSON codecs and the SocketQueue class which uses them.
 '''
-from .concurrent import new_queue, spawn
-from .exceptions import (
-    ClosedError, CodecError, DecodingError, EncodingError, FramingError)
+from .concurrent import new_lock, new_queue, spawn
+from .exceptions import DecodingError, EncodingError, FramingError
 
-from queue import Empty
 from struct import unpack
 
 
@@ -102,10 +100,12 @@ class SocketQueue(object):
     SocketQueue is a duplex Queue connected to a given socket and
     internally takes care of the conversion chain:
 
-        socket <-> raw-binary <-> codec <-> python data objects <-> queue
+    python-data <-> queue-interface <-> codec <-> socket <-:net:-> peer node.
     '''
 
     BUFSIZE = 4096
+
+    SHUT_RDWR = 2
 
     def __init__(self, socket, codec, threading_model):
         '''
@@ -119,19 +119,15 @@ class SocketQueue(object):
         '''
         self.socket = socket
         self.codec = codec
-        self.from_socket_queue = new_queue(threading_model)
-        self.to_socket_queue = new_queue(threading_model)
+        self._queue = new_queue(threading_model)
+        self._lock = new_lock(threading_model)
+        self._receiver_thread = spawn(threading_model, self._receiver)
         self._closed = False
-        self._run_sender = True
-        self._run_receiver = True
-        self._drained = False
-        spawn(threading_model, self._sender)
-        spawn(threading_model, self._receiver)
 
     @property
     def is_closed(self):
         '''
-        :property: bool -- Whether this queue has been closed or not.
+        :property: bool -- Closed by peer node or with ``close()``
         '''
         return self._closed
 
@@ -139,28 +135,29 @@ class SocketQueue(object):
         '''
         Close this queue and the underlying socket.
         '''
-        self._run_sender = False
-        self.socket.close()
         self._closed = True
+        self.socket.shutdown(self.SHUT_RDWR)
 
     def empty(self):
         '''
-        :returns: bool -- Empty if there is no items to get from this
-                          SocketQueue.
+        :returns: bool -- Empty if there is no items currently available in
+                          this SocketQueue. (Closed queue will return one
+                          ``None``-item (empty == False) after which queue
+                          will remain permanently empty and further get:s
+                          should not be attempted.
         '''
-        return self.from_socket_queue.empty()
+        return self._queue.empty()
 
     def put(self, item):
         '''
         Put item to queue -> codec -> socket.
 
         :param item: Message object.
-                     (Giving ``None`` closes sending - this is to be avoided.)
         :type item: dict, list or None
         '''
-        if self._closed or not self._run_sender:
-            raise ClosedError('Queue is closed. Cannot send more items.')
-        self.to_socket_queue.put(item)
+        msg_bytes = self.codec.into_frame(self.codec.dumps(item))
+        with self._lock:
+            self.socket.sendall(msg_bytes)
 
     def get(self):
         '''
@@ -169,60 +166,38 @@ class SocketQueue(object):
         :returns: Normally a message object (python dict or list) but
                   if socket is closed by peer and queue is drained then
                   ``None`` is returned.
+                  May also be Exception object in case of parsing or
+                  framing errors.
         '''
-        if self._drained:
-            return None
-        obj = self.from_socket_queue.get()
-        if obj is None:
-            self._drained = True
-        return obj
+        return self._queue.get()
 
-    def _socket_send(self, msg_bytes):
-        msglen = len(msg_bytes)
-        total = 0
-        while total < msglen:
-            sent = self.socket.send(msg_bytes[total:])
-            if sent == 0:
-                # TODO log the error
-                self.close()
-            total += sent
-
-    def _sender(self):
-        while self._run_sender:
-            try:
-                msg = self.to_socket_queue.get(timeout=0.1)
-                msg_bytes = self.codec.into_frame(self.codec.dumps(msg))
-                self._socket_send(msg_bytes)
-            except Empty:
-                pass
-            except Exception as e:
-                print(e)
-                self.close()
+    def _to_queue(self, bbuffer):
+        b_msg, bbuffer = self.codec.extract_message(bbuffer)
+        while b_msg is not None:
+            self._queue.put(self.codec.loads(b_msg))
+            b_msg, bbuffer = self.codec.extract_message(bbuffer)
+        return bbuffer
 
     def _receiver(self):
-        def _fatal_error(e):
-            self.close()
-            self._run_receiver = False
-            self.from_socket_queue.put(e)
-            self.from_socket_queue.put(None)
-
         bbuffer = b''
-        while self._run_receiver:
+        while True:
             try:
                 chunk = self.socket.recv(self.BUFSIZE)
-                bbuffer += chunk
-                b_msg, bbuffer = self.codec.extract_message(bbuffer)
-                while b_msg is not None:
-                    self.from_socket_queue.put(self.codec.loads(b_msg))
-                    b_msg, bbuffer = self.codec.extract_message(bbuffer)
+                bbuffer = self._to_queue(bbuffer + chunk)
                 if chunk == b'':
-                    # TODO: just peer closed or error?
-                    self._run_receiver = False
-                    self.close()
-                    self.from_socket_queue.put(None)
-            except FramingError as e:
-                _fatal_error(e)
-            except CodecError as e:
-                self.from_socket_queue.put(e)
+                    break
+            except DecodingError as e:
+                self._queue.put(e)
             except Exception as e:
-                _fatal_error(e)
+                self._queue.put(e)
+                break
+        self._closed = True
+        self._queue.put(None)
+        self.socket.shutdown(self.SHUT_RDWR)
+        self.socket.close()
+
+    def wait(self):
+        '''
+        Wait for internal socket receiver thread to finish.
+        '''
+        self._receiver_thread.join()
