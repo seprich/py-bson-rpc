@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>bsonrpc.framing &mdash; py-bson-rpc 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="py-bson-rpc 0.1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> py-bson-rpc
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">py-bson-rpc</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>bsonrpc.framing</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for bsonrpc.framing</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This module provides classes implementing different JSON-RPC 2.0 framing</span>
+<span class="sd">options. Currently RFC-7464, Netstring and Frameless -framings are provided.</span>
+
+<span class="sd">In case you need to use a different framing method, you can provide your own</span>
+<span class="sd">implementor class for this library via settings.</span>
+
+<span class="sd">The class you provide must have the following classmethods and behavior:</span>
+<span class="sd">  * ``extract_message``</span>
+<span class="sd">      .. code-block:: python</span>
+
+<span class="sd">        @classmethod</span>
+<span class="sd">        def extract_message(cls, raw_bytes)</span>
+<span class="sd">            # Args:</span>
+<span class="sd">            #    raw_bytes (bytes): 1 - N bytes from stream</span>
+<span class="sd">            # Returns:</span>
+<span class="sd">            #    bytes, bytes    (tuple of 2 byte strings)</span>
+<span class="sd">            #       * (None, raw_bytes,) == raw_bytes contains only a partial</span>
+<span class="sd">            #                               message.</span>
+<span class="sd">            #       * (msg_bytes, rest,) == a complete message +</span>
+<span class="sd">            #                               remaining bytes.</span>
+<span class="sd">            # Raises:</span>
+<span class="sd">            #    Any type of exception can be raised on a framing error.</span>
+<span class="sd">            #    Library framework will coerce these into</span>
+<span class="sd">            #    bsonrpc.exceptions.FramingError -exceptions however.</span>
+<span class="sd">            return msg_bytes, rest_bytes</span>
+<span class="sd">  * ``into_frame``</span>
+<span class="sd">      .. code-block:: python</span>
+
+<span class="sd">        @classmethod</span>
+<span class="sd">        def into_frame(cls, message_bytes):</span>
+<span class="sd">            # Args:</span>
+<span class="sd">            #    message_bytes (bytes): 1 complete JSON message serialized</span>
+<span class="sd">            #                           into bytes.</span>
+<span class="sd">            # Returns:</span>
+<span class="sd">            #    bytes</span>
+<span class="sd">            #       == framed message.</span>
+<span class="sd">            # Raises:</span>
+<span class="sd">            #    Theoretically framing method could limit message size and</span>
+<span class="sd">            #    message_bytes may be too long -&gt; causing an error -&gt;</span>
+<span class="sd">            #    coerced to bsonrpc.exceptions.FramingError</span>
+<span class="sd">            return framed_bytes</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">FramingError</span>
+
+
+<div class="viewcode-block" id="JSONFramingRFC7464"><a class="viewcode-back" href="../../index.html#bsonrpc.framing.JSONFramingRFC7464">[docs]</a><span class="k">class</span> <span class="nc">JSONFramingRFC7464</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    RFC-7464 framing.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">extract_message</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
+        <span class="k">if</span> <span class="n">raw_bytes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0x1e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span>
+                <span class="s">&#39;Start marker is missing: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\x0a</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">raw_bytes</span><span class="p">:</span>
+            <span class="n">b_msg</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">raw_bytes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;</span><span class="se">\x0a</span><span class="s">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">b_msg</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">rest</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\x1e</span><span class="s">&#39;</span> <span class="ow">in</span> <span class="n">raw_bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span>
+                    <span class="s">&#39;End marker is missing: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">into_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">message_bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\x1e</span><span class="s">&#39;</span> <span class="o">+</span> <span class="n">message_bytes</span> <span class="o">+</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\x0a</span><span class="s">&#39;</span></div>
+
+
+<div class="viewcode-block" id="JSONFramingNetstring"><a class="viewcode-back" href="../../index.html#bsonrpc.framing.JSONFramingNetstring">[docs]</a><span class="k">class</span> <span class="nc">JSONFramingNetstring</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Netstring framing.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">extract_message</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">b</span><span class="s">&#39;:&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">raw_bytes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span>
+                    <span class="s">&#39;Length information missing: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
+        <span class="n">msg_len</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">raw_bytes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">msg_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">msg_len</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span><span class="s">&#39;Invalid length: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">msg_len</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span><span class="s">&#39;Negative length: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">msg_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rest</span><span class="p">[</span><span class="n">msg_len</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">44</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span>
+                    <span class="s">&#39;Missing correct end marker: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">rest</span><span class="p">[:</span><span class="n">msg_len</span><span class="p">],</span> <span class="n">rest</span><span class="p">[(</span><span class="n">msg_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">into_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">message_bytes</span><span class="p">):</span>
+        <span class="n">msg_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_bytes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">msg_len</span><span class="p">),</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="s">&#39;:&#39;</span> <span class="o">+</span> <span class="n">message_bytes</span> <span class="o">+</span> <span class="n">b</span><span class="s">&#39;,&#39;</span></div>
+
+
+<div class="viewcode-block" id="JSONFramingNone"><a class="viewcode-back" href="../../index.html#bsonrpc.framing.JSONFramingNone">[docs]</a><span class="k">class</span> <span class="nc">JSONFramingNone</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Direct streaming without framing.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">extract_message</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
+        <span class="k">if</span> <span class="n">raw_bytes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">123</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span>
+                <span class="s">&#39;Broken state. Expected JSON Object, got: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw_bytes</span><span class="p">)</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="mi">123</span><span class="p">]</span>
+        <span class="n">uniesc</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">poppers</span> <span class="o">=</span> <span class="p">{</span><span class="mi">91</span><span class="p">:</span> <span class="p">[</span><span class="mi">93</span><span class="p">],</span> <span class="mi">123</span><span class="p">:</span> <span class="p">[</span><span class="mi">125</span><span class="p">],</span> <span class="mi">34</span><span class="p">:</span> <span class="p">[</span><span class="mi">34</span><span class="p">]}</span>
+        <span class="n">adders</span> <span class="o">=</span> <span class="p">{</span><span class="mi">91</span><span class="p">:</span> <span class="p">[</span><span class="mi">34</span><span class="p">,</span> <span class="mi">91</span><span class="p">,</span> <span class="mi">123</span><span class="p">],</span> <span class="mi">123</span><span class="p">:</span> <span class="p">[</span><span class="mi">34</span><span class="p">,</span> <span class="mi">91</span><span class="p">,</span> <span class="mi">123</span><span class="p">],</span> <span class="mi">34</span><span class="p">:</span> <span class="p">[</span><span class="mi">92</span><span class="p">],</span> <span class="mi">92</span><span class="p">:</span> <span class="p">[</span><span class="mi">117</span><span class="p">]}</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)):</span>
+            <span class="n">cbyte</span> <span class="o">=</span> <span class="n">raw_bytes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">cbyte</span> <span class="ow">in</span> <span class="n">poppers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[]):</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">cbyte</span> <span class="ow">in</span> <span class="n">adders</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[]):</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cbyte</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">92</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">117</span><span class="p">:</span>
+                <span class="n">uniesc</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">uniesc</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+                    <span class="n">stack</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">uniesc</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">stack</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">raw_bytes</span><span class="p">[:</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">raw_bytes</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">into_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">message_bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">message_bytes</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jussi Seppälä.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
