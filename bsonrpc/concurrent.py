@@ -5,6 +5,7 @@ object generators. These generators will create either
 native threading based or greenlet based objects depending
 on which threading_model is selected.
 '''
+__license__ = 'http://mozilla.org/MPL/2.0/'
 
 from .options import ThreadingModel
 

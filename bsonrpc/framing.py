@@ -42,6 +42,8 @@ The class you provide must have the following classmethods and behavior:
             #    coerced to bsonrpc.exceptions.FramingError
             return framed_bytes
 '''
+__license__ = 'http://mozilla.org/MPL/2.0/'
+
 from .exceptions import FramingError
 
 

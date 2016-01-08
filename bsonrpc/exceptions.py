@@ -1,9 +1,19 @@
 # -*- coding: utf-8 -*-
 '''
+Exceptions used in this library. Those which are imported in
+__init__.py (and mentioned in API docs) are meant for library
+users, other exceptions may be best for internal use only.
 '''
+__license__ = 'http://mozilla.org/MPL/2.0/'
 
 
-class CodecError(RuntimeError):
+class BsonRpcError(RuntimeError):
+    '''
+    Base class for produced errors.
+    '''
+
+
+class CodecError(BsonRpcError):
     '''
     Common base for framing and codec errors.
     '''

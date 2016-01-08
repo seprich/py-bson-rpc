@@ -15,9 +15,22 @@ bsonrpc
 
 .. automodule:: bsonrpc
 
-.. autoclass:: bsonrpc.socket_queue.SocketQueue
+
+.. autoclass:: bsonrpc.BSONRpc
+   :show-inheritance:
    :members:
    :special-members: __init__
+
+
+.. autoclass:: bsonrpc.JSONRpc
+   :show-inheritance:
+   :members:
+   :special-members: __init__
+
+
+.. autoclass:: bsonrpc.rpc.RPCDefaults
+   :members:
+   :undoc-members:
 
 
 bsonrpc.framing

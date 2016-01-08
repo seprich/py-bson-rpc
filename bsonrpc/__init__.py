@@ -7,9 +7,12 @@ Install with pip3
 And use:
     ``import bsonrpc``
 '''
+__license__ = 'http://mozilla.org/MPL/2.0/'
 
-from .socket_queue import SocketQueue
+from .rpc import BSONRpc, JSONRpc
+
 
 __all__ = [
-    'SocketQueue',
+    'BSONRpc',
+    'JSONRpc',
 ]

@@ -2,6 +2,8 @@
 '''
 JSON & BSON codecs and the SocketQueue class which uses them.
 '''
+__license__ = 'http://mozilla.org/MPL/2.0/'
+
 from .concurrent import new_lock, new_queue, spawn
 from .exceptions import DecodingError, EncodingError, FramingError
 
