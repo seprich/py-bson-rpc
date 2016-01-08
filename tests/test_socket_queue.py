@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from bsonrpc.exceptions import DecodingError, EncodingError
+import socket as tsocket
+import gevent.socket as gsocket
+
+from bsonrpc.exceptions import DecodingError, EncodingError, FramingError
 from bsonrpc.framing import (
     JSONFramingNetstring, JSONFramingNone, JSONFramingRFC7464)
-from bsonrpc.socket_queue import BSONCodec, JSONCodec
+from bsonrpc.options import ThreadingModel
+from bsonrpc.socket_queue import BSONCodec, JSONCodec, SocketQueue
 
 
 msg1 = {
@@ -67,4 +71,43 @@ def test_codec_exceptions(codec):
         codec.dumps(impossible)
 
 
-# TODO: Test the SocketQueue
+@pytest.fixture(scope='module',
+                params=[ThreadingModel.THREADS, ThreadingModel.GEVENT])
+def threading_model(request):
+    return request.param
+
+
+def _socketpair(tmodel):
+    if tmodel == ThreadingModel.THREADS:
+        return tsocket.socketpair()
+    elif tmodel == ThreadingModel.GEVENT:
+        return gsocket.socketpair()
+
+
+def test_socket_queue_basics(codec, threading_model):
+    s1, s2 = _socketpair(threading_model)
+    sq1 = SocketQueue(s1, codec, threading_model)
+    sq2 = SocketQueue(s2, codec, threading_model)
+    sq1.put(msg2)
+    sq1.put(msg1)
+    sq2.put(msg2)
+    assert sq2.get() == msg2
+    assert sq2.get() == msg1
+    assert sq1.get() == msg2
+    sq1.close()
+    assert sq2.get() is None
+    assert sq1.get() is None
+    assert sq1.is_closed
+    assert sq2.is_closed
+    sq1.join()
+    sq2.join()
+
+
+def test_socket_queue_garbage(codec, threading_model):
+    s1, s2 = _socketpair(threading_model)
+    sq = SocketQueue(s2, codec, threading_model)
+    s1.sendall(b'\xfa\xff\xff\xff\xde\xadabracadabra bobby jenkins\x05\x04')
+    assert isinstance(sq.get(), FramingError)
+    # All but DecodingError's are considered irrecoverable -> socket is closed.
+    assert sq.is_closed
+    sq.join()

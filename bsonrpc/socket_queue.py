@@ -45,6 +45,8 @@ class BSONCodec(object):
             return None, raw_bytes
         try:
             msg_len = unpack('<i', raw_bytes[:4])[0]
+            if msg_len < 5:
+                raise FramingError('Minimum valid message length is 5.')
             if rb_len < msg_len:
                 return None, raw_bytes
             else:
@@ -138,16 +140,6 @@ class SocketQueue(object):
         self._closed = True
         self.socket.shutdown(self.SHUT_RDWR)
 
-    def empty(self):
-        '''
-        :returns: bool -- Empty if there is no items currently available in
-                          this SocketQueue. (Closed queue will return one
-                          ``None``-item (empty == False) after which queue
-                          will remain permanently empty and further get:s
-                          should not be attempted.
-        '''
-        return self._queue.empty()
-
     def put(self, item):
         '''
         Put item to queue -> codec -> socket.
@@ -188,6 +180,10 @@ class SocketQueue(object):
                     break
             except DecodingError as e:
                 self._queue.put(e)
+            except OSError as e:  # shutdown() from another greenlet
+                if e.errno != 9:
+                    self._queue.put(e)
+                break
             except Exception as e:
                 self._queue.put(e)
                 break
@@ -196,7 +192,7 @@ class SocketQueue(object):
         self.socket.shutdown(self.SHUT_RDWR)
         self.socket.close()
 
-    def wait(self):
+    def join(self):
         '''
         Wait for internal socket receiver thread to finish.
         '''

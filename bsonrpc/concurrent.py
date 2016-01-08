@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
+This module provides a collection of concurrency related
+object generators. These generators will create either
+native threading based or greenlet based objects depending
+on which threading_model is selected.
 '''
 
 from .options import ThreadingModel
