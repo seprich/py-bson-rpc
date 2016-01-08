@@ -1,144 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>bsonrpc.socket_queue &mdash; py-bson-rpc 0.1.0 documentation</title>
-  
-
-  
-  
-
-  
-
-  
-  
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-
-  
-
-  
-  
-    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-    <link rel="top" title="py-bson-rpc 0.1.0 documentation" href="../../index.html"/>
-        <link rel="up" title="Module code" href="../index.html"/> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
-</head>
-
-<body class="wy-body-for-nav" role="document">
-
-  <div class="wy-grid-for-nav">
-
+    <title>bsonrpc.socket_queue &mdash; py-bson-rpc 0.1.0 documentation</title>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
-            <a href="../../index.html" class="icon icon-home"> py-bson-rpc
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                0.1
-              </div>
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="py-bson-rpc 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">py-bson-rpc 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-                <ul class="simple">
-</ul>
-
-            
-          
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../index.html">py-bson-rpc</a>
-      </nav>
-
-
-      
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href="../../index.html">Docs</a> &raquo;</li>
-      
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      
-    <li>bsonrpc.socket_queue</li>
-      <li class="wy-breadcrumbs-aside">
-        
-          
-        
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
             
   <h1>Source code for bsonrpc.socket_queue</h1><div class="highlight"><pre>
 <span class="c"># -*- coding: utf-8 -*-</span>
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">JSON &amp; BSON codecs and the SocketQueue class which uses them.</span>
 <span class="sd">&#39;&#39;&#39;</span>
-<span class="kn">from</span> <span class="nn">.concurrent</span> <span class="kn">import</span> <span class="n">new_queue</span><span class="p">,</span> <span class="n">spawn</span>
-<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ClosedError</span><span class="p">,</span> <span class="n">CodecError</span><span class="p">,</span> <span class="n">DecodingError</span><span class="p">,</span> <span class="n">EncodingError</span><span class="p">,</span> <span class="n">FramingError</span><span class="p">)</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;http://mozilla.org/MPL/2.0/&#39;</span>
 
-<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Empty</span>
+<span class="kn">from</span> <span class="nn">.concurrent</span> <span class="kn">import</span> <span class="n">new_lock</span><span class="p">,</span> <span class="n">new_queue</span><span class="p">,</span> <span class="n">spawn</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">DecodingError</span><span class="p">,</span> <span class="n">EncodingError</span><span class="p">,</span> <span class="n">FramingError</span>
+
 <span class="kn">from</span> <span class="nn">struct</span> <span class="kn">import</span> <span class="n">unpack</span>
 
 
-<div class="viewcode-block" id="BSONCodec"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.BSONCodec">[docs]</a><span class="k">class</span> <span class="nc">BSONCodec</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">BSONCodec</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Encode/Decode message to/from BSON format.</span>
 
@@ -175,6 +113,8 @@
             <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">msg_len</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="s">&#39;&lt;i&#39;</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">[:</span><span class="mi">4</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">msg_len</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span><span class="s">&#39;Minimum valid message length is 5.&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rb_len</span> <span class="o">&lt;</span> <span class="n">msg_len</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="n">raw_bytes</span>
             <span class="k">else</span><span class="p">:</span>
@@ -183,10 +123,10 @@
             <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">into_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message_bytes</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">message_bytes</span></div>
+        <span class="k">return</span> <span class="n">message_bytes</span>
 
 
-<div class="viewcode-block" id="JSONCodec"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.JSONCodec">[docs]</a><span class="k">class</span> <span class="nc">JSONCodec</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">JSONCodec</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Encode/Decode messages to/from JSON format.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -222,7 +162,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framer</span><span class="p">(</span><span class="n">message_bytes</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">FramingError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="SocketQueue"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.SocketQueue">[docs]</a><span class="k">class</span> <span class="nc">SocketQueue</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -230,10 +170,12 @@
 <span class="sd">    SocketQueue is a duplex Queue connected to a given socket and</span>
 <span class="sd">    internally takes care of the conversion chain:</span>
 
-<span class="sd">        socket &lt;-&gt; raw-binary &lt;-&gt; codec &lt;-&gt; python data objects &lt;-&gt; queue</span>
+<span class="sd">    python-data &lt;-&gt; queue-interface &lt;-&gt; codec &lt;-&gt; socket &lt;-:net:-&gt; peer node.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">BUFSIZE</span> <span class="o">=</span> <span class="mi">4096</span>
+
+    <span class="n">SHUT_RDWR</span> <span class="o">=</span> <span class="mi">2</span>
 
 <div class="viewcode-block" id="SocketQueue.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.SocketQueue.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">codec</span><span class="p">,</span> <span class="n">threading_model</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -247,19 +189,15 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="n">socket</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">codec</span> <span class="o">=</span> <span class="n">codec</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span> <span class="o">=</span> <span class="n">new_queue</span><span class="p">(</span><span class="n">threading_model</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">to_socket_queue</span> <span class="o">=</span> <span class="n">new_queue</span><span class="p">(</span><span class="n">threading_model</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_run_sender</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_run_receiver</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_drained</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="n">spawn</span><span class="p">(</span><span class="n">threading_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sender</span><span class="p">)</span>
-        <span class="n">spawn</span><span class="p">(</span><span class="n">threading_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receiver</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">new_queue</span><span class="p">(</span><span class="n">threading_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">new_lock</span><span class="p">(</span><span class="n">threading_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_thread</span> <span class="o">=</span> <span class="n">spawn</span><span class="p">(</span><span class="n">threading_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_receiver</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">False</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :property: bool -- Whether this queue has been closed or not.</span>
+<span class="sd">        :property: bool -- Closed by peer node or with ``close()``</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span>
 
@@ -267,28 +205,19 @@
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Close this queue and the underlying socket.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_run_sender</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">True</span></div>
-
-<div class="viewcode-block" id="SocketQueue.empty"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.SocketQueue.empty">[docs]</a>    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :returns: bool -- Empty if there is no items to get from this</span>
-<span class="sd">                          SocketQueue.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SHUT_RDWR</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SocketQueue.put"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.SocketQueue.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Put item to queue -&gt; codec -&gt; socket.</span>
 
 <span class="sd">        :param item: Message object.</span>
-<span class="sd">                     (Giving ``None`` closes sending - this is to be avoided.)</span>
 <span class="sd">        :type item: dict, list or None</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sender</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ClosedError</span><span class="p">(</span><span class="s">&#39;Queue is closed. Cannot send more items.&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">to_socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+        <span class="n">msg_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">into_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">msg_bytes</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SocketQueue.get"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.SocketQueue.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -297,121 +226,68 @@
 <span class="sd">        :returns: Normally a message object (python dict or list) but</span>
 <span class="sd">                  if socket is closed by peer and queue is drained then</span>
 <span class="sd">                  ``None`` is returned.</span>
+<span class="sd">                  May also be Exception object in case of parsing or</span>
+<span class="sd">                  framing errors.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drained</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
-        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_drained</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="k">return</span> <span class="n">obj</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_socket_send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg_bytes</span><span class="p">):</span>
-        <span class="n">msglen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg_bytes</span><span class="p">)</span>
-        <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">total</span> <span class="o">&lt;</span> <span class="n">msglen</span><span class="p">:</span>
-            <span class="n">sent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg_bytes</span><span class="p">[</span><span class="n">total</span><span class="p">:])</span>
-            <span class="k">if</span> <span class="n">sent</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c"># TODO log the error</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="n">total</span> <span class="o">+=</span> <span class="n">sent</span>
-
-    <span class="k">def</span> <span class="nf">_sender</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sender</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_socket_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-                <span class="n">msg_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">into_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_socket_send</span><span class="p">(</span><span class="n">msg_bytes</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">Empty</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">_to_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bbuffer</span><span class="p">):</span>
+        <span class="n">b_msg</span><span class="p">,</span> <span class="n">bbuffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">extract_message</span><span class="p">(</span><span class="n">bbuffer</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">b_msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">b_msg</span><span class="p">))</span>
+            <span class="n">b_msg</span><span class="p">,</span> <span class="n">bbuffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">extract_message</span><span class="p">(</span><span class="n">bbuffer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bbuffer</span>
 
     <span class="k">def</span> <span class="nf">_receiver</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_fatal_error</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_receiver</span> <span class="o">=</span> <span class="bp">False</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
-
         <span class="n">bbuffer</span> <span class="o">=</span> <span class="n">b</span><span class="s">&#39;&#39;</span>
-        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_receiver</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BUFSIZE</span><span class="p">)</span>
-                <span class="n">bbuffer</span> <span class="o">+=</span> <span class="n">chunk</span>
-                <span class="n">b_msg</span><span class="p">,</span> <span class="n">bbuffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">extract_message</span><span class="p">(</span><span class="n">bbuffer</span><span class="p">)</span>
-                <span class="k">while</span> <span class="n">b_msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">b_msg</span><span class="p">))</span>
-                    <span class="n">b_msg</span><span class="p">,</span> <span class="n">bbuffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codec</span><span class="o">.</span><span class="n">extract_message</span><span class="p">(</span><span class="n">bbuffer</span><span class="p">)</span>
+                <span class="n">bbuffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_queue</span><span class="p">(</span><span class="n">bbuffer</span> <span class="o">+</span> <span class="n">chunk</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">chunk</span> <span class="o">==</span> <span class="n">b</span><span class="s">&#39;&#39;</span><span class="p">:</span>
-                    <span class="c"># TODO: just peer closed or error?</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_run_receiver</span> <span class="o">=</span> <span class="bp">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">FramingError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">_fatal_error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">CodecError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">from_socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="k">except</span> <span class="n">DecodingError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c"># shutdown() from another greenlet</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="mi">9</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">break</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">_fatal_error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SHUT_RDWR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SocketQueue.join"><a class="viewcode-back" href="../../index.html#bsonrpc.socket_queue.SocketQueue.join">[docs]</a>    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Wait for internal socket receiver thread to finish.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_receiver_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div></div>
 </pre></div>
 
-           </div>
           </div>
-          <footer>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2016, Jussi Seppälä.
-
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
         </div>
       </div>
-
-    </section>
-
-  </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'0.1.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
-      });
-  </script>
-   
-
-</body>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">py-bson-rpc 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jussi Seppälä.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
 </html>

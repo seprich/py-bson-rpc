@@ -6,7 +6,6 @@
 Welcome to py-bson-rpc's documentation!
 =======================================
 
-
 .. toctree::
    :maxdepth: 2
 
@@ -17,19 +16,28 @@ bsonrpc
 .. automodule:: bsonrpc
 
 
+.. autoclass:: bsonrpc.BSONRpc
+   :show-inheritance:
+   :members:
+   :special-members: __init__
+
+
+.. autoclass:: bsonrpc.JSONRpc
+   :show-inheritance:
+   :members:
+   :special-members: __init__
+
+
+.. autoclass:: bsonrpc.rpc.RPCDefaults
+   :members:
+   :undoc-members:
+
+
 bsonrpc.framing
 ---------------
 
 .. automodule:: bsonrpc.framing
    :members:
-
-
-bsonrpc.socket_queue
---------------------
-
-.. automodule:: bsonrpc.socket_queue
-   :members:
-   :special-members: __init__
 
 
 Indices and tables
