@@ -3,8 +3,11 @@
 '''
 __license__ = 'http://mozilla.org/MPL/2.0/'
 
-from .concurrent import spawn
+from .concurrent import new_queue, spawn
+from .definitions import Definitions
+#from .exceptions import CodecError
 from .framing import JSONFramingRFC7464
+from .interfaces import PeerProxy
 from .options import MessageCodec, ThreadingModel
 from .socket_queue import BSONCodec, JSONCodec, SocketQueue
 
@@ -13,12 +16,34 @@ def _default_id_generator():
     msg_id = 0
     while True:
         msg_id += 1
-        yield 'id-%d' % msg_id
+        yield msg_id
+
+
+class Dispatcher(object):
+
+    def __init__(self, rpc):
+        self.rpc = rpc
+        self._thread = spawn(rpc.threading_model, self.run)
+        self._responses = {}
+
+    def register(self, msg_id):
+        queue = new_queue(self.rpc.threading_model)
+        self._responses[msg_id] = queue
+        return queue
+
+    def unregister(self, msg_id):
+        del self._responses[msg_id]
+
+    def run(self):
+        pass
+
+    def join(self):
+        self._thread.join()
 
 
 class RpcBase(object):
 
-    concurrency = ThreadingModel.THREADS
+    threading_model = ThreadingModel.THREADS
     parallel_request_handling = ThreadingModel.THREADS
     parallel_notification_handling = None
 
@@ -30,24 +55,35 @@ class RpcBase(object):
     def __init__(self, socket, codec, services=None, **options):
         for key, value in options.items():
             setattr(self, key, value)
+        self._def = Definitions(self.protocol, self.protocol_version)
         self.services = services
-        self.queue = SocketQueue(socket, codec, self.concurrency)
-        if self.services:
-            self._dispatcher_thread = spawn(self.concurrency,
-                                            self._run_service_dispatcher)
-        else:
-            self._dispatcher_thread = None
+        self.queue = SocketQueue(socket, codec, self.threading_model)
+        self.dispatcher = Dispatcher(self)
 
     def invoke_request(self, method_name, *args, **kwargs):
-        pass
+        def _send_request(msg_id):
+            try:
+                result_queue = self.dispatcher.register(msg_id)
+                self.queue.put(
+                    self._def.request(msg_id, method_name, args, kwargs))
+                return result_queue
+            except Exception as e:
+                self.dispatcher.unregister(msg_id)
+                raise e
+
+        msg_id = next(self.id_generator)
+        queue = _send_request(msg_id)
+        result = queue.get()
+        if isinstance(result, Exception):
+            raise result
+        return result
 
     def invoke_notification(self, method_name, *args, **kwargs):
-        pass
+        self.queue.put(
+            self._def.notification(method_name, args, kwargs))
 
     def get_peer_proxy(self, requests, notifications):
-        # lists of strings
-        # peer_proxy object.
-        pass
+        return PeerProxy(self, requests, notifications)
 
     def close(self):
         # stop dispatcher and close
@@ -56,12 +92,11 @@ class RpcBase(object):
     def join(self):
         pass
 
-    def _run_service_dispatcher(self):
-        pass
-        # while True: patch ditch
-
 
 class BSONRpc(RpcBase):
+
+    protocol = 'bsonrpc'
+    protocol_version = '2.0'
 
     def __init__(self, socket, services=None, **options):
         '''
@@ -81,6 +116,9 @@ class BSONRpc(RpcBase):
 
 
 class JSONRpc(RpcBase):
+
+    protocol = 'jsonrpc'
+    protocol_version = '2.0'
 
     #: Default choice for JSON Framing
     framing_cls = JSONFramingRFC7464
