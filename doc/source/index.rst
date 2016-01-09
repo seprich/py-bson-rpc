@@ -28,11 +28,6 @@ bsonrpc
    :special-members: __init__
 
 
-.. autoclass:: bsonrpc.rpc.RPCDefaults
-   :members:
-   :undoc-members:
-
-
 bsonrpc.framing
 ---------------
 
