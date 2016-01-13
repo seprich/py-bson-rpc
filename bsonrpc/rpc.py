@@ -21,13 +21,14 @@ def _default_id_generator():
 
 class Dispatcher(object):
 
-    def __init__(self, rpc):
-        self.rpc = rpc
-        self._thread = spawn(rpc.threading_model, self.run)
+    def __init__(self, threading_model, queue):
+        self._threading_model = threading_model
+        self._queue = queue
+        self._thread = spawn(threading_model, self.run)
         self._responses = {}
 
     def register(self, msg_id):
-        queue = new_queue(self.rpc.threading_model)
+        queue = new_queue(self._threading_model)
         self._responses[msg_id] = queue
         return queue
 
@@ -35,7 +36,11 @@ class Dispatcher(object):
         del self._responses[msg_id]
 
     def run(self):
-        pass
+        while True:
+            try:
+                msg = self._queue.get()
+            except Exception as e:
+                pass
 
     def join(self):
         self._thread.join()
@@ -58,7 +63,7 @@ class RpcBase(object):
         self._def = Definitions(self.protocol, self.protocol_version)
         self.services = services
         self.queue = SocketQueue(socket, codec, self.threading_model)
-        self.dispatcher = Dispatcher(self)
+        self.dispatcher = Dispatcher(self.threading_model, self.queue)
 
     def invoke_request(self, method_name, *args, **kwargs):
         def _send_request(msg_id):
