@@ -1,0 +1,36 @@
+:orphan:
+
+**connection_id**
+  Label to use in logs to identify current connection. Default: ''
+
+**dispatcher_panic_cb**
+  A function which must accept 2 arguments: ``connection_id`` and
+  ``exception``. Return value ignored. Default: ``None``
+
+**id_generator**
+  A generator which must yield a unique ID on each next()-call.
+  Used for generating ID's for request messages.
+  Default: internal default generator yielding integers 1, 2, ...
+
+**parallel_notification_handling**
+  Affects by which strategy each notification handler will be launched
+  to handle each notification.
+  One of 3 supported choices: ``None``,
+  ``bsonrpc.ThreadingModel.THREADS`` or
+  ``bsonrpc.ThreadingModel.GEVENT``. Default: ``None``
+
+**parallel_request_handling**
+  Affects by which strategy each request handler will be launched
+  to handle each request.
+  One of 3 supported choices: ``None``,
+  ``bsonrpc.ThreadingModel.THREADS`` or
+  ``bsonrpc.ThreadingModel.GEVENT``. Default:
+  ``bsonrpc.ThreadingModel.THREADS``
+
+**threading_model**
+  Affects the concurrency implementation of the internal
+  dispatcher and message stream decoder.
+  One of 2 supported choices:
+  ``bsonrpc.ThreadingModel.THREADS`` or
+  ``bsonrpc.ThreadingModel.GEVENT``. Default:
+  ``bsonrpc.ThreadingModel.THREADS``

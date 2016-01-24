@@ -3,48 +3,88 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to py-bson-rpc's documentation!
-=======================================
 
 .. toctree::
    :maxdepth: 2
 
 
-bsonrpc
-=======
+bsonrpc - JSON/BSON RPC
+=======================
 
 .. automodule:: bsonrpc
 
+Install with pip3
+
+And use:
+    ``import bsonrpc``
+
+
+BSONRpc Objects
+===============
 
 .. autoclass:: bsonrpc.BSONRpc
    :show-inheritance:
    :members:
+   :inherited-members:
    :special-members: __init__
 
+
+JSONRpc Objects
+===============
 
 .. autoclass:: bsonrpc.JSONRpc
    :show-inheritance:
    :members:
+   :inherited-members:
    :special-members: __init__
 
+Providing Services
+==================
 
-.. autoclass:: bsonrpc.rpc.RPCDefaults
-   :members:
-   :undoc-members:
+.. autofunction:: bsonrpc.service_class
+
+.. autofunction:: bsonrpc.request
+
+.. autofunction:: bsonrpc.notification
+
+.. autofunction:: bsonrpc.rpc_request
+
+.. autofunction:: bsonrpc.rpc_notification
+
+Service Provider Example
+------------------------
+
+.. code-block:: python
+
+  from bsonrpc import service_class, request, rpc_request, notification
+
+  @service_class
+  class MyServices(object):
+
+      # __init__  etc..
+
+      @request
+      def revert(self, txt):
+          return ''.join(reversed(list(txt)))
+
+      @rpc_request
+      def calculate(self, rpc, a, b, c):
+          rpc.invoke_notification('report_progress', '.')
+          rpc.invoke_notification('report_progress', '..')
+          return a * b * c
+
+      @notification
+      def log(self, fmt, *args):
+          print('From peer: ' + fmt % args)
 
 
 bsonrpc.framing
----------------
+===============
 
 .. automodule:: bsonrpc.framing
-   :members:
 
 
-Indices and tables
-==================
+About Threading Model
+=====================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
+TODO

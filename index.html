@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to py-bson-rpc’s documentation! &mdash; py-bson-rpc 0.1.0 documentation</title>
+    <title>bsonrpc - JSON/BSON RPC &mdash; py-bson-rpc 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -42,12 +42,15 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to py-bson-rpc&#8217;s documentation!</a></li>
-<li><a class="reference internal" href="#module-bsonrpc">bsonrpc</a><ul>
-<li><a class="reference internal" href="#module-bsonrpc.framing">bsonrpc.framing</a></li>
+<li><a class="reference internal" href="#">bsonrpc - JSON/BSON RPC</a></li>
+<li><a class="reference internal" href="#bsonrpc-objects">BSONRpc Objects</a></li>
+<li><a class="reference internal" href="#jsonrpc-objects">JSONRpc Objects</a></li>
+<li><a class="reference internal" href="#providing-services">Providing Services</a><ul>
+<li><a class="reference internal" href="#service-provider-example">Service Provider Example</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#module-bsonrpc.framing">bsonrpc.framing</a></li>
+<li><a class="reference internal" href="#about-threading-model">About Threading Model</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
@@ -78,67 +81,358 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-py-bson-rpc-s-documentation">
-<h1>Welcome to py-bson-rpc&#8217;s documentation!<a class="headerlink" href="#welcome-to-py-bson-rpc-s-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
+  <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
 </div>
-</div>
 <div class="section" id="module-bsonrpc">
-<span id="bsonrpc"></span><h1>bsonrpc<a class="headerlink" href="#module-bsonrpc" title="Permalink to this headline">¶</a></h1>
+<span id="bsonrpc-json-bson-rpc"></span><h1>bsonrpc - JSON/BSON RPC<a class="headerlink" href="#module-bsonrpc" title="Permalink to this headline">¶</a></h1>
 <p>Library for JSON RPC 2.0 and BSON RPC</p>
 <p>Install with pip3</p>
 <dl class="docutils">
 <dt>And use:</dt>
 <dd><code class="docutils literal"><span class="pre">import</span> <span class="pre">bsonrpc</span></code></dd>
 </dl>
+</div>
+<div class="section" id="bsonrpc-objects">
+<h1>BSONRpc Objects<a class="headerlink" href="#bsonrpc-objects" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="bsonrpc.BSONRpc">
-<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">BSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#bsonrpc.rpc.RPCDefaults" title="bsonrpc.rpc.RPCDefaults"><code class="xref py py-class docutils literal"><span class="pre">bsonrpc.rpc.RPCDefaults</span></code></a></p>
+<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">BSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">bsonrpc.rpc.RpcBase</span></code></p>
+<p>BSON RPC Connector. Follows closely <a class="reference external" href="http://www.jsonrpc.org/specification">JSON-RPC 2.0</a> specification
+with only few differences:</p>
+<ul class="simple">
+<li>Batches are not supported since BSON does not support top-level lists.</li>
+<li>Keyword &#8216;jsonrpc&#8217; has been replaced by &#8216;bsonrpc&#8217;</li>
+</ul>
+<p>Connects via socket to RPC peer node. Provides access to the services
+provided by the peer node and makes local services available for the peer.</p>
 <dl class="method">
 <dt id="bsonrpc.BSONRpc.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.BSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>socket</strong> (<em>socket.socket object</em>) &#8211; Socket which is connected to the peer node</li>
-<li><strong>services</strong> (<em>RPCServices instance</em>) &#8211; Derived class object providing request handlers and
-notification handlers, used by peer node.</li>
+<li><strong>socket</strong> (<em>socket.socket</em>) &#8211; Socket connected to the peer. (Anything behaving like
+a socket and implementing socket methods <code class="docutils literal"><span class="pre">close</span></code>,
+<code class="docutils literal"><span class="pre">recv</span></code>, <code class="docutils literal"><span class="pre">sendall</span></code> and <code class="docutils literal"><span class="pre">shutdown</span></code> is equally
+viable)</li>
+<li><strong>services</strong> (<code class="docutils literal"><span class="pre">&#64;service_class</span></code> Class | <code class="docutils literal"><span class="pre">None</span></code>) &#8211; Object providing request handlers and
+notification handlers to be exposed to peer.
+See <a class="reference internal" href="#providing-services">Providing Services</a> for details.</li>
+<li><strong>options</strong> &#8211; Modify behavior by overriding the library defaults.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
-<p>TODO: Document options.</p>
+<p><strong>Available options:</strong></p>
+<dl class="docutils">
+<dt><strong>concurrent_notification_handling</strong></dt>
+<dd><p class="first">Affects by which strategy each notification handler will be launched
+to handle each notification. See <a class="reference internal" href="#about-threading-model">About Threading Model</a> for more info.
+Choices:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">None</span></code> (Default)</li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.THREADS</span></code></li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></li>
+</ul>
+</dd>
+<dt><strong>concurrent_request_handling</strong></dt>
+<dd><p class="first">Affects by which strategy each request handler will be launched
+to handle each request. See <a class="reference internal" href="#about-threading-model">About Threading Model</a> for more info.
+Choices:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">None</span></code>,</li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.THREADS</span></code> (Default)</li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></li>
+</ul>
+</dd>
+<dt><strong>connection_id</strong></dt>
+<dd>Label to use in logs to identify current connection. Default: &#8216;&#8217;</dd>
+<dt><strong>id_generator</strong></dt>
+<dd>A generator which must yield a unique ID on each next()-call.
+Used for generating ID&#8217;s for request messages.
+Default: internal default generator yielding integers 1, 2, ...</dd>
+<dt><strong>threading_model</strong></dt>
+<dd><p class="first">Affects the concurrency implementation of the internal
+dispatcher and message stream decoder.
+See <a class="reference internal" href="#about-threading-model">About Threading Model</a> for more info
+Choices:</p>
+<p class="last"><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.THREADS</span></code> (Default)
+<code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.BSONRpc.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.BSONRpc.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the connection and stop the internal dispatcher.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.BSONRpc.get_peer_proxy">
+<code class="descname">get_peer_proxy</code><span class="sig-paren">(</span><em>requests=None</em>, <em>notifications=None</em>, <em>timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.BSONRpc.get_peer_proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a RPC peer proxy object. Method calls to this object
+are delegated and executed on the connected RPC peer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>requests</strong> (<em>list of str | None</em>) &#8211; A list of method names which can be called and
+will be delegated to peer node as requests.
+Default: None -&gt; All arbitrary attributes are
+handled as requests to the peer.</li>
+<li><strong>notifications</strong> (<em>list of str | None</em>) &#8211; A list of method names which can be called and
+will be delegated to peer node as notifications.
+Default: None -&gt; If <code class="docutils literal"><span class="pre">requests</span></code> is not <code class="docutils literal"><span class="pre">None</span></code>
+all other attributes are handled as
+notifications.</li>
+<li><strong>timeout</strong> (<em>float | None</em>) &#8211; Timeout in seconds, maximum time to wait responses
+to each Request.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A proxy object. Attribute method calls delegated over RPC.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">get_peer_proxy()</span></code> (without arguments) will return a proxy
+where all attribute method calls are turned into Requests,
+except calls via <code class="docutils literal"><span class="pre">.n</span></code> which are turned into Notifications.
+Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">()</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">n</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>          <span class="c"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;Alise&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+</pre></div>
+</div>
+<p>But if arguments are given then the interpretation is explicit and
+<code class="docutils literal"><span class="pre">.n</span></code>-delegator is not used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">([</span><span class="s">&#39;swap_this&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;log_this&#39;</span><span class="p">])</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>            <span class="c"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;esilA&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.BSONRpc.invoke_notification">
+<code class="descname">invoke_notification</code><span class="sig-paren">(</span><em>method_name</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.BSONRpc.invoke_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an RPC Notification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>method_name</strong> (<em>str</em>) &#8211; Name of the notification method.</li>
+<li><strong>args</strong> &#8211; Arguments</li>
+<li><strong>kwargs</strong> &#8211; Keyword Arguments.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>NOTE:</strong></dt>
+<dd>Use either arguments or keyword arguments. Both can&#8217;t
+be used simultaneously in a single call.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.BSONRpc.invoke_request">
+<code class="descname">invoke_request</code><span class="sig-paren">(</span><em>method_name</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.BSONRpc.invoke_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invoke RPC Request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>method_name</strong> (<em>str</em>) &#8211; Name of the request method.</li>
+<li><strong>args</strong> &#8211; Arguments</li>
+<li><strong>kwargs</strong> &#8211; Keyword Arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Response value(s) from peer.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">ResponseTimeout | PeerError subclass</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>A timeout for the request can be set by giving a special keyword
+argument <code class="docutils literal"><span class="pre">timeout</span></code> (float value of seconds) which can be prefixed
+by any number of underscores - if necessary - to differentiate it from
+the actual keyword arguments going to the peer node method call.</p>
+<p>e.g.
+<code class="docutils literal"><span class="pre">invoke_request('testing',</span> <span class="pre">[],</span> <span class="pre">{'_timeout':</span> <span class="pre">22,</span> <span class="pre">'__timeout:</span> <span class="pre">10.0})</span></code>
+would call a request method <code class="docutils literal"><span class="pre">testing(_timeout=22)</span></code> on the RPC peer
+and wait for the response for 10 seconds.</p>
+<dl class="docutils">
+<dt><strong>NOTE:</strong></dt>
+<dd>Use either arguments or keyword arguments. Both can&#8217;t
+be used in a single call.
+(Naturally the timeout argument does not count to the rule.)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.BSONRpc.join">
+<code class="descname">join</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.BSONRpc.join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for the internal dispatcher to shut down.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bsonrpc.BSONRpc.protocol">
+<code class="descname">protocol</code><em class="property"> = 'bsonrpc'</em><a class="headerlink" href="#bsonrpc.BSONRpc.protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol name used in messages</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bsonrpc.BSONRpc.protocol_version">
+<code class="descname">protocol_version</code><em class="property"> = '2.0'</em><a class="headerlink" href="#bsonrpc.BSONRpc.protocol_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol version used in messages</p>
 </dd></dl>
 
 </dd></dl>
 
+</div>
+<div class="section" id="jsonrpc-objects">
+<h1>JSONRpc Objects<a class="headerlink" href="#jsonrpc-objects" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="bsonrpc.JSONRpc">
-<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">JSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#bsonrpc.rpc.RPCDefaults" title="bsonrpc.rpc.RPCDefaults"><code class="xref py py-class docutils literal"><span class="pre">bsonrpc.rpc.RPCDefaults</span></code></a></p>
+<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">JSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">bsonrpc.rpc.RpcBase</span></code></p>
+<p>JSON RPC Connector. Implements the <a class="reference external" href="http://www.jsonrpc.org/specification">JSON-RPC 2.0</a> specification.</p>
+<p>Connects via socket to RPC peer node. Provides access to the services
+provided by the peer node. Optional <code class="docutils literal"><span class="pre">services</span></code> parameter will take an
+object of which methods are accessible to the peer node.</p>
+<p>Various methods of JSON message framing are available for the stream
+transport.</p>
 <dl class="method">
 <dt id="bsonrpc.JSONRpc.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.JSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>socket</strong> (<em>socket.socket object</em>) &#8211; Socket which is connected to the peer node</li>
-<li><strong>services</strong> (<em>RPCServices instance</em>) &#8211; Derived class object providing request handlers and
-notification handlers, used by peer node.</li>
+<li><strong>socket</strong> (<em>socket.socket</em>) &#8211; Socket connected to the peer. (Anything behaving like
+a socket and implementing socket methods <code class="docutils literal"><span class="pre">close</span></code>,
+<code class="docutils literal"><span class="pre">recv</span></code>, <code class="docutils literal"><span class="pre">sendall</span></code> and <code class="docutils literal"><span class="pre">shutdown</span></code> is equally
+viable)</li>
+<li><strong>services</strong> (<code class="docutils literal"><span class="pre">&#64;service_class</span></code> Class | <code class="docutils literal"><span class="pre">None</span></code>) &#8211; Object providing request handlers and
+notification handlers to be exposed to peer.
+See <a class="reference internal" href="#providing-services">Providing Services</a> for details.</li>
+<li><strong>options</strong> &#8211; Modify behavior by overriding the library defaults.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
-<p>TODO: Document options.</p>
+<p><strong>Available options:</strong></p>
+<dl class="docutils">
+<dt><strong>framing_cls</strong></dt>
+<dd><p class="first">Selection of framing method implementation.
+Either select one of the following:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">bsonrpc.JSONFramingNetstring</span></code></li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.JSONFramingNone</span></code></li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.JSONFramingRFC7464</span></code> (Default)</li>
+</ul>
+<p class="last">Or provide your own implementation class for some other framing type.
+See <a class="reference internal" href="#bsonrpc-framing">bsonrpc.framing</a> for details.</p>
+</dd>
+</dl>
+<dl class="docutils">
+<dt><strong>concurrent_notification_handling</strong></dt>
+<dd><p class="first">Affects by which strategy each notification handler will be launched
+to handle each notification. See <a class="reference internal" href="#about-threading-model">About Threading Model</a> for more info.
+Choices:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">None</span></code> (Default)</li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.THREADS</span></code></li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></li>
+</ul>
+</dd>
+<dt><strong>concurrent_request_handling</strong></dt>
+<dd><p class="first">Affects by which strategy each request handler will be launched
+to handle each request. See <a class="reference internal" href="#about-threading-model">About Threading Model</a> for more info.
+Choices:</p>
+<ul class="last simple">
+<li><code class="docutils literal"><span class="pre">None</span></code>,</li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.THREADS</span></code> (Default)</li>
+<li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></li>
+</ul>
+</dd>
+<dt><strong>connection_id</strong></dt>
+<dd>Label to use in logs to identify current connection. Default: &#8216;&#8217;</dd>
+<dt><strong>id_generator</strong></dt>
+<dd>A generator which must yield a unique ID on each next()-call.
+Used for generating ID&#8217;s for request messages.
+Default: internal default generator yielding integers 1, 2, ...</dd>
+<dt><strong>threading_model</strong></dt>
+<dd><p class="first">Affects the concurrency implementation of the internal
+dispatcher and message stream decoder.
+See <a class="reference internal" href="#about-threading-model">About Threading Model</a> for more info
+Choices:</p>
+<p class="last"><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.THREADS</span></code> (Default)
+<code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.JSONRpc.batch_call">
+<code class="descname">batch_call</code><span class="sig-paren">(</span><em>batch_calls</em>, <em>timeout=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc.batch_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc.batch_call" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_calls</strong> (<em>list of 4-tuples</em>) &#8211; Batch of requests/notifications to be executed on
+the peer node.
+<code class="docutils literal"><span class="pre">[(&quot;r/n&quot;,</span> <span class="pre">&quot;&lt;method-name&gt;&quot;,</span> <span class="pre">args,</span> <span class="pre">kwargs),</span> <span class="pre">...]</span></code>
+The 1st value in a tuple should be a string
+&#8220;r&#8221; or &#8220;n&#8221; indicating Request or Notification.
+Use [] and {} for empty args and kwargs (not None).</li>
+<li><strong>timeout</strong> (<em>float | None</em>) &#8211; Timeout in seconds for waiting results. Default: None</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>list of results to requests, in order of original requests.
+Each result may be:<ul>
+<li>a single return value or</li>
+<li>a tuple of return values or</li>
+<li>an Exception object</li>
+</ul>
+</li>
+<li><code class="docutils literal"><span class="pre">None</span></code> if <code class="docutils literal"><span class="pre">batch_calls</span></code> contained only notifications.</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">ResponseTimeout in case batch_calls contains requests,
+for which response batch did not arrive within timeout.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.JSONRpc.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.JSONRpc.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the connection and stop the internal dispatcher.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -148,44 +442,223 @@ notification handlers, used by peer node.</li>
 <p>alias of <code class="xref py py-class docutils literal"><span class="pre">JSONFramingRFC7464</span></code></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="bsonrpc.JSONRpc.get_peer_proxy">
+<code class="descname">get_peer_proxy</code><span class="sig-paren">(</span><em>requests=None</em>, <em>notifications=None</em>, <em>timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.JSONRpc.get_peer_proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a RPC peer proxy object. Method calls to this object
+are delegated and executed on the connected RPC peer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>requests</strong> (<em>list of str | None</em>) &#8211; A list of method names which can be called and
+will be delegated to peer node as requests.
+Default: None -&gt; All arbitrary attributes are
+handled as requests to the peer.</li>
+<li><strong>notifications</strong> (<em>list of str | None</em>) &#8211; A list of method names which can be called and
+will be delegated to peer node as notifications.
+Default: None -&gt; If <code class="docutils literal"><span class="pre">requests</span></code> is not <code class="docutils literal"><span class="pre">None</span></code>
+all other attributes are handled as
+notifications.</li>
+<li><strong>timeout</strong> (<em>float | None</em>) &#8211; Timeout in seconds, maximum time to wait responses
+to each Request.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A proxy object. Attribute method calls delegated over RPC.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">get_peer_proxy()</span></code> (without arguments) will return a proxy
+where all attribute method calls are turned into Requests,
+except calls via <code class="docutils literal"><span class="pre">.n</span></code> which are turned into Notifications.
+Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">()</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">n</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>          <span class="c"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;Alise&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+</pre></div>
+</div>
+<p>But if arguments are given then the interpretation is explicit and
+<code class="docutils literal"><span class="pre">.n</span></code>-delegator is not used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">([</span><span class="s">&#39;swap_this&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;log_this&#39;</span><span class="p">])</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>            <span class="c"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;esilA&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+</pre></div>
+</div>
 </dd></dl>
 
-<dl class="class">
-<dt id="bsonrpc.rpc.RPCDefaults">
-<em class="property">class </em><code class="descclassname">bsonrpc.rpc.</code><code class="descname">RPCDefaults</code><a class="reference internal" href="_modules/bsonrpc/rpc.html#RPCDefaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.rpc.RPCDefaults" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="bsonrpc.rpc.RPCDefaults.concurrency">
-<code class="descname">concurrency</code><em class="property"> = 'threads'</em><a class="headerlink" href="#bsonrpc.rpc.RPCDefaults.concurrency" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dl class="method">
+<dt id="bsonrpc.JSONRpc.invoke_notification">
+<code class="descname">invoke_notification</code><span class="sig-paren">(</span><em>method_name</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.JSONRpc.invoke_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an RPC Notification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>method_name</strong> (<em>str</em>) &#8211; Name of the notification method.</li>
+<li><strong>args</strong> &#8211; Arguments</li>
+<li><strong>kwargs</strong> &#8211; Keyword Arguments.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>NOTE:</strong></dt>
+<dd>Use either arguments or keyword arguments. Both can&#8217;t
+be used simultaneously in a single call.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.JSONRpc.invoke_request">
+<code class="descname">invoke_request</code><span class="sig-paren">(</span><em>method_name</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.JSONRpc.invoke_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invoke RPC Request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>method_name</strong> (<em>str</em>) &#8211; Name of the request method.</li>
+<li><strong>args</strong> &#8211; Arguments</li>
+<li><strong>kwargs</strong> &#8211; Keyword Arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Response value(s) from peer.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">ResponseTimeout | PeerError subclass</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>A timeout for the request can be set by giving a special keyword
+argument <code class="docutils literal"><span class="pre">timeout</span></code> (float value of seconds) which can be prefixed
+by any number of underscores - if necessary - to differentiate it from
+the actual keyword arguments going to the peer node method call.</p>
+<p>e.g.
+<code class="docutils literal"><span class="pre">invoke_request('testing',</span> <span class="pre">[],</span> <span class="pre">{'_timeout':</span> <span class="pre">22,</span> <span class="pre">'__timeout:</span> <span class="pre">10.0})</span></code>
+would call a request method <code class="docutils literal"><span class="pre">testing(_timeout=22)</span></code> on the RPC peer
+and wait for the response for 10 seconds.</p>
+<dl class="docutils">
+<dt><strong>NOTE:</strong></dt>
+<dd>Use either arguments or keyword arguments. Both can&#8217;t
+be used in a single call.
+(Naturally the timeout argument does not count to the rule.)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="bsonrpc.JSONRpc.join">
+<code class="descname">join</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bsonrpc.JSONRpc.join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for the internal dispatcher to shut down.</p>
+</dd></dl>
 
 <dl class="attribute">
-<dt id="bsonrpc.rpc.RPCDefaults.connection_id">
-<code class="descname">connection_id</code><em class="property"> = ''</em><a class="headerlink" href="#bsonrpc.rpc.RPCDefaults.connection_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="bsonrpc.JSONRpc.protocol">
+<code class="descname">protocol</code><em class="property"> = 'jsonrpc'</em><a class="headerlink" href="#bsonrpc.JSONRpc.protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol name used in messages</p>
+</dd></dl>
 
 <dl class="attribute">
-<dt id="bsonrpc.rpc.RPCDefaults.id_generator">
-<code class="descname">id_generator</code><em class="property"> = &lt;generator object _default_id_generator&gt;</em><a class="headerlink" href="#bsonrpc.rpc.RPCDefaults.id_generator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="bsonrpc.rpc.RPCDefaults.parallel_notification_handling">
-<code class="descname">parallel_notification_handling</code><em class="property"> = None</em><a class="headerlink" href="#bsonrpc.rpc.RPCDefaults.parallel_notification_handling" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="bsonrpc.rpc.RPCDefaults.parallel_request_handling">
-<code class="descname">parallel_request_handling</code><em class="property"> = 'threads'</em><a class="headerlink" href="#bsonrpc.rpc.RPCDefaults.parallel_request_handling" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="bsonrpc.JSONRpc.protocol_version">
+<code class="descname">protocol_version</code><em class="property"> = '2.0'</em><a class="headerlink" href="#bsonrpc.JSONRpc.protocol_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol version used in messages</p>
+</dd></dl>
 
 </dd></dl>
 
+</div>
+<div class="section" id="providing-services">
+<h1>Providing Services<a class="headerlink" href="#providing-services" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="bsonrpc.service_class">
+<code class="descclassname">bsonrpc.</code><code class="descname">service_class</code><span class="sig-paren">(</span><em>cls</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/interfaces.html#service_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.service_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class decorator enabling the instances of the class to be used
+as a <code class="docutils literal"><span class="pre">services</span></code>-provider in <a class="reference internal" href="#jsonrpc-objects">JSONRpc Objects</a>
+and <a class="reference internal" href="#bsonrpc-objects">BSONRpc Objects</a>.</p>
+<p>Use decorators <code class="docutils literal"><span class="pre">request</span></code>, <code class="docutils literal"><span class="pre">notification</span></code>, <code class="docutils literal"><span class="pre">rpc_request</span></code> and
+<code class="docutils literal"><span class="pre">rpc_notification</span></code> to expose methods for the RPC peer node.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bsonrpc.request">
+<code class="descclassname">bsonrpc.</code><code class="descname">request</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/interfaces.html#request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method decorator announcing the method to be exposed as
+a request handler.</p>
+<p>This decorator assumes that the method parameters are trivially
+exposed to the peer node in &#8216;as-is&#8217; manner.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bsonrpc.notification">
+<code class="descclassname">bsonrpc.</code><code class="descname">notification</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/interfaces.html#notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method decorator announcing the method to be exposed as
+a notification handler.</p>
+<p>This decorator assumes that the method parameters are trivially
+exposed to the peer node in &#8216;as-is&#8217; manner.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bsonrpc.rpc_request">
+<code class="descclassname">bsonrpc.</code><code class="descname">rpc_request</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/interfaces.html#rpc_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.rpc_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method decorator announcing the method to be exposed as
+a request handler.</p>
+<p>This decorator assumes that the first parameter (after <code class="docutils literal"><span class="pre">self</span></code>)
+takes a BSONRpc/JSONRpc object reference as an argument, so that the method
+will have an access to make RPC callbacks on the peer node (requests and
+notifications) during its execution. From the second parameter onward the
+parameters are exposed as-is to the peer node.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bsonrpc.rpc_notification">
+<code class="descclassname">bsonrpc.</code><code class="descname">rpc_notification</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/interfaces.html#rpc_notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.rpc_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method decorator announcing the method to be exposed as
+a notification handler.</p>
+<p>This decorator assumes that the first parameter (after <code class="docutils literal"><span class="pre">self</span></code>)
+takes a BSONRpc/JSONRpc object reference as an argument.
+From the second parameter onward the
+parameters are exposed as-is to the peer node.</p>
+</dd></dl>
+
+<div class="section" id="service-provider-example">
+<h2>Service Provider Example<a class="headerlink" href="#service-provider-example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">bsonrpc</span> <span class="kn">import</span> <span class="n">service_class</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">rpc_request</span><span class="p">,</span> <span class="n">notification</span>
+
+<span class="nd">@service_class</span>
+<span class="k">class</span> <span class="nc">MyServices</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="c"># __init__  etc..</span>
+
+    <span class="nd">@request</span>
+    <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">txt</span><span class="p">)))</span>
+
+    <span class="nd">@rpc_request</span>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="n">rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="s">&#39;report_progress&#39;</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="s">&#39;report_progress&#39;</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">*</span> <span class="n">c</span>
+
+    <span class="nd">@notification</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;From peer: &#39;</span> <span class="o">+</span> <span class="n">fmt</span> <span class="o">%</span> <span class="n">args</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="module-bsonrpc.framing">
-<span id="bsonrpc-framing"></span><h2>bsonrpc.framing<a class="headerlink" href="#module-bsonrpc.framing" title="Permalink to this headline">¶</a></h2>
+<span id="bsonrpc-framing"></span><h1>bsonrpc.framing<a class="headerlink" href="#module-bsonrpc.framing" title="Permalink to this headline">¶</a></h1>
 <p>This module provides classes implementing different JSON-RPC 2.0 framing
-options. Currently RFC-7464, Netstring and Frameless -framings are provided.</p>
+options. Currently <a class="reference external" href="https://tools.ietf.org/html/rfc7464">RFC-7464</a>, <a class="reference external" href="http://cr.yp.to/proto/netstrings.txt">Netstring</a> and <a class="reference external" href="http://www.simple-is-better.org/json-rpc/transport_sockets.html#pipelined-requests-responses-json-splitter">Frameless</a>
+-message framings are included.</p>
 <p>In case you need to use a different framing method, you can provide your own
-implementor class for this library via settings.</p>
+implementor class for this library via options.</p>
 <dl class="docutils">
 <dt>The class you provide must have the following classmethods and behavior:</dt>
 <dd><ul class="first last">
@@ -196,15 +669,19 @@ implementor class for this library via settings.</p>
     <span class="c"># Args:</span>
     <span class="c">#    raw_bytes (bytes): 1 - N bytes from stream</span>
     <span class="c"># Returns:</span>
-    <span class="c">#    bytes, bytes    (tuple of 2 byte strings)</span>
-    <span class="c">#       * (None, raw_bytes,) == raw_bytes contains only a partial</span>
-    <span class="c">#                               message.</span>
-    <span class="c">#       * (msg_bytes, rest,) == a complete message +</span>
-    <span class="c">#                               remaining bytes.</span>
+    <span class="c">#    bytes, bytes    (tuple of 2 (builtins.bytes))</span>
+    <span class="c">#       * The 1st value must be either:</span>
+    <span class="c">#           * None - if the given `raw_bytes`-argument does not</span>
+    <span class="c">#                    contain enough bytes to lift a complete</span>
+    <span class="c">#                    JSON message from it.</span>
+    <span class="c">#           * Unframed bytes supposedly containing exactly 1 JSON</span>
+    <span class="c">#             message.</span>
+    <span class="c">#       * The 2nd value consists of the remaining bytes of</span>
+    <span class="c">#         `raw_bytes` if/when a framed message has been lifted</span>
+    <span class="c">#         to become the unframed message in the 1st return value.</span>
     <span class="c"># Raises:</span>
-    <span class="c">#    Any type of exception can be raised on a framing error.</span>
-    <span class="c">#    Library framework will coerce these into</span>
-    <span class="c">#    bsonrpc.exceptions.FramingError -exceptions however.</span>
+    <span class="c">#    Library framework will coerce any raised Exceptions into</span>
+    <span class="c">#    bsonrpc.exceptions.FramingError -exceptions.</span>
     <span class="k">return</span> <span class="n">msg_bytes</span><span class="p">,</span> <span class="n">rest_bytes</span>
 </pre></div>
 </div>
@@ -222,9 +699,8 @@ implementor class for this library via settings.</p>
     <span class="c">#    bytes</span>
     <span class="c">#       == framed message.</span>
     <span class="c"># Raises:</span>
-    <span class="c">#    Theoretically framing method could limit message size and</span>
-    <span class="c">#    message_bytes may be too long -&gt; causing an error -&gt;</span>
-    <span class="c">#    coerced to bsonrpc.exceptions.FramingError</span>
+    <span class="c">#    Library framework will coerce any raised Exceptions into</span>
+    <span class="c">#    bsonrpc.exceptions.FramingError -exceptions.</span>
     <span class="k">return</span> <span class="n">framed_bytes</span>
 </pre></div>
 </div>
@@ -234,33 +710,10 @@ implementor class for this library via settings.</p>
 </ul>
 </dd>
 </dl>
-<dl class="class">
-<dt id="bsonrpc.framing.JSONFramingNetstring">
-<em class="property">class </em><code class="descclassname">bsonrpc.framing.</code><code class="descname">JSONFramingNetstring</code><a class="reference internal" href="_modules/bsonrpc/framing.html#JSONFramingNetstring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.framing.JSONFramingNetstring" title="Permalink to this definition">¶</a></dt>
-<dd><p>Netstring framing.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="bsonrpc.framing.JSONFramingNone">
-<em class="property">class </em><code class="descclassname">bsonrpc.framing.</code><code class="descname">JSONFramingNone</code><a class="reference internal" href="_modules/bsonrpc/framing.html#JSONFramingNone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.framing.JSONFramingNone" title="Permalink to this definition">¶</a></dt>
-<dd><p>Direct streaming without framing.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="bsonrpc.framing.JSONFramingRFC7464">
-<em class="property">class </em><code class="descclassname">bsonrpc.framing.</code><code class="descname">JSONFramingRFC7464</code><a class="reference internal" href="_modules/bsonrpc/framing.html#JSONFramingRFC7464"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.framing.JSONFramingRFC7464" title="Permalink to this definition">¶</a></dt>
-<dd><p>RFC-7464 framing.</p>
-</dd></dl>
-
 </div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
-</ul>
+<div class="section" id="about-threading-model">
+<h1>About Threading Model<a class="headerlink" href="#about-threading-model" title="Permalink to this headline">¶</a></h1>
+<p>TODO</p>
 </div>
 
 

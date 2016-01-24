@@ -66,77 +66,371 @@
   <h1>Source code for bsonrpc.rpc</h1><div class="highlight"><pre>
 <span class="c"># -*- coding: utf-8 -*-</span>
 <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Main module providing BSONRpc and JSONRpc.</span>
 <span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+<span class="kn">from</span> <span class="nn">bsonrpc.definitions</span> <span class="kn">import</span> <span class="n">Definitions</span>
+<span class="kn">from</span> <span class="nn">bsonrpc.exceptions</span> <span class="kn">import</span> <span class="n">BsonRpcError</span><span class="p">,</span> <span class="n">ResponseTimeout</span>
+<span class="kn">from</span> <span class="nn">bsonrpc.dispatcher</span> <span class="kn">import</span> <span class="n">Dispatcher</span>
+<span class="kn">from</span> <span class="nn">bsonrpc.framing</span> <span class="kn">import</span> <span class="n">JSONFramingRFC7464</span>
+<span class="kn">from</span> <span class="nn">bsonrpc.options</span> <span class="kn">import</span> <span class="n">DefaultOptionsMixin</span><span class="p">,</span> <span class="n">MessageCodec</span>
+<span class="kn">from</span> <span class="nn">bsonrpc.socket_queue</span> <span class="kn">import</span> <span class="n">BSONCodec</span><span class="p">,</span> <span class="n">JSONCodec</span><span class="p">,</span> <span class="n">SocketQueue</span>
+
 <span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;http://mozilla.org/MPL/2.0/&#39;</span>
 
-<span class="kn">from</span> <span class="nn">.framing</span> <span class="kn">import</span> <span class="n">JSONFramingRFC7464</span>
-<span class="kn">from</span> <span class="nn">.options</span> <span class="kn">import</span> <span class="n">ThreadingModel</span>
-<span class="kn">from</span> <span class="nn">.socket_queue</span> <span class="kn">import</span> <span class="n">BSONCodec</span><span class="p">,</span> <span class="n">JSONCodec</span><span class="p">,</span> <span class="n">SocketQueue</span>
+
+<span class="k">class</span> <span class="nc">PeerProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">class</span> <span class="nc">NotificationProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rpc</span> <span class="o">=</span> <span class="n">rpc</span>
+
+        <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">_curried</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_curried</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">,</span> <span class="n">requests</span><span class="p">,</span> <span class="n">notifications</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_item_in</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">collection</span> <span class="ow">and</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">collection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rpc</span> <span class="o">=</span> <span class="n">rpc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_requests</span> <span class="o">=</span> <span class="n">requests</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_notifications</span> <span class="o">=</span> <span class="n">notifications</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="n">PeerProxy</span><span class="o">.</span><span class="n">NotificationProxy</span><span class="p">(</span><span class="n">rpc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">_item_in</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">requests</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_item_in</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">notifications</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requests</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requests</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">_curried</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rpc</span><span class="o">.</span><span class="n">invoke_request</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">_____timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_curried</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_notifications</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_notifications</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; object has no attribute &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_default_id_generator</span><span class="p">():</span>
-    <span class="n">msg_id</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="n">msg_id</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">yield</span> <span class="s">&#39;id-</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">msg_id</span>
+<span class="k">class</span> <span class="nc">DefaultServices</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_request_handlers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_notification_handlers</span> <span class="o">=</span> <span class="p">{}</span>
 
 
-<div class="viewcode-block" id="RPCDefaults"><a class="viewcode-back" href="../../index.html#bsonrpc.RPCDefaults">[docs]</a><span class="k">class</span> <span class="nc">RPCDefaults</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span></div>
+<span class="k">class</span> <span class="nc">RpcBase</span><span class="p">(</span><span class="n">DefaultOptionsMixin</span><span class="p">):</span>
 
-    <span class="n">concurrency</span> <span class="o">=</span> <span class="n">ThreadingModel</span><span class="o">.</span><span class="n">THREADS</span>
-    <span class="n">parallel_request_handling</span> <span class="o">=</span> <span class="n">ThreadingModel</span><span class="o">.</span><span class="n">THREADS</span>
-    <span class="n">parallel_notification_handling</span> <span class="o">=</span> <span class="bp">None</span>
-
-    <span class="n">connection_id</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-    <span class="n">id_generator</span> <span class="o">=</span> <span class="n">_default_id_generator</span><span class="p">()</span>
-
-
-<div class="viewcode-block" id="BSONRpc"><a class="viewcode-back" href="../../index.html#bsonrpc.BSONRpc">[docs]</a><span class="k">class</span> <span class="nc">BSONRpc</span><span class="p">(</span><span class="n">RPCDefaults</span><span class="p">):</span></div>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :param socket: Socket which is connected to the peer node</span>
-<span class="sd">        :type socket: socket.socket object</span>
-<span class="sd">        :param services: Derived class object providing request handlers and</span>
-<span class="sd">                         notification handlers, used by peer node.</span>
-<span class="sd">        :type services: RPCServices instance</span>
-
-<span class="sd">        TODO: Document options.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">codec</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">services</span><span class="p">,</span> <span class="s">&#39;_request_handlers&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">services</span><span class="p">,</span> <span class="s">&#39;_notification_handlers&#39;</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definitions</span> <span class="o">=</span> <span class="n">Definitions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">protocol_version</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">services</span> <span class="o">=</span> <span class="n">services</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="n">SocketQueue</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="n">BSONCodec</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">concurrency</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">services</span><span class="p">:</span>
-            <span class="c"># TODO: spawn dispatcher.</span>
-            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket_queue</span> <span class="o">=</span> <span class="n">SocketQueue</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="n">codec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threading_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span> <span class="o">=</span> <span class="n">Dispatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">invoke_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Invoke RPC Request.</span>
+
+<span class="sd">        :param method_name: Name of the request method.</span>
+<span class="sd">        :type method_name: str</span>
+<span class="sd">        :param args: Arguments</span>
+<span class="sd">        :param kwargs: Keyword Arguments.</span>
+<span class="sd">        :returns: Response value(s) from peer.</span>
+<span class="sd">        :raises: ResponseTimeout | PeerError subclass</span>
+
+<span class="sd">        A timeout for the request can be set by giving a special keyword</span>
+<span class="sd">        argument ``timeout`` (float value of seconds) which can be prefixed</span>
+<span class="sd">        by any number of underscores - if necessary - to differentiate it from</span>
+<span class="sd">        the actual keyword arguments going to the peer node method call.</span>
+
+<span class="sd">        e.g.</span>
+<span class="sd">        ``invoke_request(&#39;testing&#39;, [], {&#39;_timeout&#39;: 22, &#39;__timeout: 10.0})``</span>
+<span class="sd">        would call a request method ``testing(_timeout=22)`` on the RPC peer</span>
+<span class="sd">        and wait for the response for 10 seconds.</span>
+
+<span class="sd">        **NOTE:**</span>
+<span class="sd">          Use either arguments or keyword arguments. Both can&#39;t</span>
+<span class="sd">          be used in a single call.</span>
+<span class="sd">          (Naturally the timeout argument does not count to the rule.)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">rec</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;^_*timeout$&#39;</span><span class="p">)</span>
+        <span class="n">to_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">rec</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">to_keys</span><span class="p">:</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">to_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">to_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">def</span> <span class="nf">_send_request</span><span class="p">(</span><span class="n">msg_id</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">promise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">definitions</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+                        <span class="n">msg_id</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">promise</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>  <span class="c"># TODO: what exceptions?</span>
+
+        <span class="n">msg_id</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id_generator</span><span class="p">)</span>
+        <span class="n">promise</span> <span class="o">=</span> <span class="n">_send_request</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+        <span class="n">promise</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">promise</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">promise</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">result</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ResponseTimeout</span><span class="p">(</span><span class="s">u&#39;Waiting response expired.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">invoke_notification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Send an RPC Notification.</span>
+
+<span class="sd">        :param method_name: Name of the notification method.</span>
+<span class="sd">        :type method_name: str</span>
+<span class="sd">        :param args: Arguments</span>
+<span class="sd">        :param kwargs: Keyword Arguments.</span>
+
+<span class="sd">        **NOTE:**</span>
+<span class="sd">          Use either arguments or keyword arguments. Both can&#39;t</span>
+<span class="sd">          be used simultaneously in a single call.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">definitions</span><span class="o">.</span><span class="n">notification</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_peer_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">notifications</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get a RPC peer proxy object. Method calls to this object</span>
+<span class="sd">        are delegated and executed on the connected RPC peer.</span>
+
+<span class="sd">        :param requests: A list of method names which can be called and</span>
+<span class="sd">                         will be delegated to peer node as requests.</span>
+<span class="sd">                         Default: None -&gt; All arbitrary attributes are</span>
+<span class="sd">                         handled as requests to the peer.</span>
+<span class="sd">        :type requests: list of str | None</span>
+<span class="sd">        :param notifications: A list of method names which can be called and</span>
+<span class="sd">                              will be delegated to peer node as notifications.</span>
+<span class="sd">                              Default: None -&gt; If ``requests`` is not ``None``</span>
+<span class="sd">                              all other attributes are handled as</span>
+<span class="sd">                              notifications.</span>
+<span class="sd">        :type notifications: list of str | None</span>
+<span class="sd">        :param timeout: Timeout in seconds, maximum time to wait responses</span>
+<span class="sd">                        to each Request.</span>
+<span class="sd">        :type timeout: float | None</span>
+<span class="sd">        :returns: A proxy object. Attribute method calls delegated over RPC.</span>
+
+<span class="sd">        ``get_peer_proxy()`` (without arguments) will return a proxy</span>
+<span class="sd">        where all attribute method calls are turned into Requests,</span>
+<span class="sd">        except calls via ``.n`` which are turned into Notifications.</span>
+<span class="sd">        Example:</span>
+<span class="sd">        ::</span>
+
+<span class="sd">          proxy = rpc.get_peer_proxy()</span>
+<span class="sd">          proxy.n.log_this(&#39;hello&#39;)          # -&gt; Notification</span>
+<span class="sd">          result = proxy.swap_this(&#39;Alise&#39;)  # -&gt; Request</span>
+
+<span class="sd">        But if arguments are given then the interpretation is explicit and</span>
+<span class="sd">        ``.n``-delegator is not used:</span>
+<span class="sd">        ::</span>
+
+<span class="sd">          proxy = rpc.get_peer_proxy([&#39;swap_this&#39;], [&#39;log_this&#39;])</span>
+<span class="sd">          proxy.log_this(&#39;hello&#39;)            # -&gt; Notification</span>
+<span class="sd">          result = proxy.swap_this(&#39;esilA&#39;)  # -&gt; Request</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">PeerProxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="p">,</span> <span class="n">notifications</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Close the connection and stop the internal dispatcher.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c"># Closing the socket queue causes the dispatcher to close also.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Wait for the internal dispatcher to shut down.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="JSONRpc"><a class="viewcode-back" href="../../index.html#bsonrpc.JSONRpc">[docs]</a><span class="k">class</span> <span class="nc">JSONRpc</span><span class="p">(</span><span class="n">RPCDefaults</span><span class="p">):</span></div>
+<div class="viewcode-block" id="BSONRpc"><a class="viewcode-back" href="../../index.html#bsonrpc.BSONRpc">[docs]</a><span class="k">class</span> <span class="nc">BSONRpc</span><span class="p">(</span><span class="n">RpcBase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    BSON RPC Connector. Follows closely `JSON-RPC 2.0`_ specification</span>
+<span class="sd">    with only few differences:</span>
+
+<span class="sd">    * Batches are not supported since BSON does not support top-level lists.</span>
+<span class="sd">    * Keyword &#39;jsonrpc&#39; has been replaced by &#39;bsonrpc&#39;</span>
+
+<span class="sd">    Connects via socket to RPC peer node. Provides access to the services</span>
+<span class="sd">    provided by the peer node and makes local services available for the peer.</span>
+
+<span class="sd">    .. _`JSON-RPC 2.0`: http://www.jsonrpc.org/specification</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c">#: Protocol name used in messages</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="s">&#39;bsonrpc&#39;</span>
+
+    <span class="c">#: Protocol version used in messages</span>
+    <span class="n">protocol_version</span> <span class="o">=</span> <span class="s">&#39;2.0&#39;</span>
+
+<div class="viewcode-block" id="BSONRpc.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.BSONRpc.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="n">DefaultServices</span><span class="p">(),</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param socket: Socket connected to the peer. (Anything behaving like</span>
+<span class="sd">                       a socket and implementing socket methods ``close``,</span>
+<span class="sd">                       ``recv``, ``sendall`` and ``shutdown`` is equally</span>
+<span class="sd">                       viable)</span>
+<span class="sd">        :type socket: socket.socket</span>
+<span class="sd">        :param services: Object providing request handlers and</span>
+<span class="sd">                         notification handlers to be exposed to peer.</span>
+<span class="sd">                         See `Providing Services`_ for details.</span>
+<span class="sd">        :type services: ``@service_class`` Class | ``None``</span>
+<span class="sd">        :param options: Modify behavior by overriding the library defaults.</span>
+
+<span class="sd">        **Available options:**</span>
+
+<span class="sd">        .. include:: options.snippet</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codec</span> <span class="o">=</span> <span class="n">MessageCodec</span><span class="o">.</span><span class="n">BSON</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BSONRpc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span>
+                                      <span class="n">BSONCodec</span><span class="p">(),</span>
+                                      <span class="n">services</span><span class="o">=</span><span class="n">services</span><span class="p">,</span>
+                                      <span class="o">**</span><span class="n">options</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JSONRpc"><a class="viewcode-back" href="../../index.html#bsonrpc.JSONRpc">[docs]</a><span class="k">class</span> <span class="nc">JSONRpc</span><span class="p">(</span><span class="n">RpcBase</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    JSON RPC Connector. Implements the `JSON-RPC 2.0`_ specification.</span>
+
+<span class="sd">    Connects via socket to RPC peer node. Provides access to the services</span>
+<span class="sd">    provided by the peer node. Optional ``services`` parameter will take an</span>
+<span class="sd">    object of which methods are accessible to the peer node.</span>
+
+<span class="sd">    Various methods of JSON message framing are available for the stream</span>
+<span class="sd">    transport.</span>
+
+<span class="sd">    .. _`JSON-RPC 2.0`: http://www.jsonrpc.org/specification</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c">#: Protocol name used in messages</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="s">&#39;jsonrpc&#39;</span>
+
+    <span class="c">#: Protocol version used in messages</span>
+    <span class="n">protocol_version</span> <span class="o">=</span> <span class="s">&#39;2.0&#39;</span>
 
     <span class="c">#: Default choice for JSON Framing</span>
     <span class="n">framing_cls</span> <span class="o">=</span> <span class="n">JSONFramingRFC7464</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<div class="viewcode-block" id="JSONRpc.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.JSONRpc.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="n">DefaultServices</span><span class="p">(),</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :param socket: Socket which is connected to the peer node</span>
-<span class="sd">        :type socket: socket.socket object</span>
-<span class="sd">        :param services: Derived class object providing request handlers and</span>
-<span class="sd">                         notification handlers, used by peer node.</span>
-<span class="sd">        :type services: RPCServices instance</span>
+<span class="sd">        :param socket: Socket connected to the peer. (Anything behaving like</span>
+<span class="sd">                       a socket and implementing socket methods ``close``,</span>
+<span class="sd">                       ``recv``, ``sendall`` and ``shutdown`` is equally</span>
+<span class="sd">                       viable)</span>
+<span class="sd">        :type socket: socket.socket</span>
+<span class="sd">        :param services: Object providing request handlers and</span>
+<span class="sd">                         notification handlers to be exposed to peer.</span>
+<span class="sd">                         See `Providing Services`_ for details.</span>
+<span class="sd">        :type services: ``@service_class`` Class | ``None``</span>
+<span class="sd">        :param options: Modify behavior by overriding the library defaults.</span>
 
-<span class="sd">        TODO: Document options.</span>
+<span class="sd">        **Available options:**</span>
+
+<span class="sd">        **framing_cls**</span>
+<span class="sd">          Selection of framing method implementation.</span>
+<span class="sd">          Either select one of the following:</span>
+
+<span class="sd">          * ``bsonrpc.JSONFramingNetstring``</span>
+<span class="sd">          * ``bsonrpc.JSONFramingNone``</span>
+<span class="sd">          * ``bsonrpc.JSONFramingRFC7464`` (Default)</span>
+
+<span class="sd">          Or provide your own implementation class for some other framing type.</span>
+<span class="sd">          See `bsonrpc.framing`_ for details.</span>
+
+<span class="sd">        .. include:: options.snippet</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">services</span> <span class="o">=</span> <span class="n">services</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="n">SocketQueue</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span>
-                                 <span class="n">JSONCodec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">framing_cls</span><span class="o">.</span><span class="n">extract_message</span><span class="p">,</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">framing_cls</span><span class="o">.</span><span class="n">into_frame</span><span class="p">),</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">concurrency</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">services</span><span class="p">:</span>
-            <span class="c"># TODO: spawn dispatcher</span>
-            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codec</span> <span class="o">=</span> <span class="n">MessageCodec</span><span class="o">.</span><span class="n">JSON</span>
+        <span class="n">framing_cls</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;framing_cls&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">framing_cls</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JSONRpc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span>
+                                      <span class="n">JSONCodec</span><span class="p">(</span><span class="n">framing_cls</span><span class="o">.</span><span class="n">extract_message</span><span class="p">,</span>
+                                                <span class="n">framing_cls</span><span class="o">.</span><span class="n">into_frame</span><span class="p">),</span>
+                                      <span class="n">services</span><span class="o">=</span><span class="n">services</span><span class="p">,</span>
+                                      <span class="o">**</span><span class="n">options</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="JSONRpc.batch_call"><a class="viewcode-back" href="../../index.html#bsonrpc.JSONRpc.batch_call">[docs]</a>    <span class="k">def</span> <span class="nf">batch_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_calls</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param batch_calls: Batch of requests/notifications to be executed on</span>
+<span class="sd">                            the peer node.</span>
+<span class="sd">                            ``[(&quot;r/n&quot;, &quot;&lt;method-name&gt;&quot;, args, kwargs), ...]``</span>
+<span class="sd">                            The 1st value in a tuple should be a string</span>
+<span class="sd">                            &quot;r&quot; or &quot;n&quot; indicating Request or Notification.</span>
+<span class="sd">                            Use [] and {} for empty args and kwargs (not None).</span>
+<span class="sd">        :type batch_calls: list of 4-tuples</span>
+<span class="sd">        :param timeout: Timeout in seconds for waiting results. Default: None</span>
+<span class="sd">        :type timeout: float | None</span>
+<span class="sd">        :returns: * list of results to requests, in order of original requests.</span>
+<span class="sd">                    Each result may be:</span>
+
+<span class="sd">                    * a single return value or</span>
+<span class="sd">                    * a tuple of return values or</span>
+<span class="sd">                    * an Exception object</span>
+
+<span class="sd">                  * ``None`` if ``batch_calls`` contained only notifications.</span>
+<span class="sd">        :raises: ResponseTimeout in case batch_calls contains requests,</span>
+<span class="sd">                 for which response batch did not arrive within timeout.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">_compose_batch</span><span class="p">(</span><span class="n">batch_calls</span><span class="p">):</span>
+            <span class="n">request_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">call_type</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">batch_calls</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">call_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">):</span>
+                        <span class="n">batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">definitions</span><span class="o">.</span><span class="n">notification</span><span class="p">(</span>
+                                <span class="n">method_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">msg_id</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id_generator</span><span class="p">)</span>
+                        <span class="n">batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">definitions</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+                                <span class="n">msg_id</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+                        <span class="n">request_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BsonRpcError</span><span class="p">(</span>
+                    <span class="s">u&#39;Malformed batch call: &#39;</span> <span class="o">+</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">request_ids</span><span class="p">,</span> <span class="n">batch</span>
+
+        <span class="k">def</span> <span class="nf">_send_batch_expect_response</span><span class="p">(</span><span class="n">request_ids</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">promise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">request_ids</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">promise</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">request_ids</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>  <span class="c"># TODO: what exceptions?</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">batch_calls</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BsonRpcError</span><span class="p">(</span><span class="s">u&#39;Refusing to send an empty batch.&#39;</span><span class="p">)</span>
+        <span class="n">request_ids</span><span class="p">,</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">_compose_batch</span><span class="p">(</span><span class="n">batch_calls</span><span class="p">)</span>
+        <span class="c"># Notifications only:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">request_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">socket_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>  <span class="c"># TODO: what exceptions?</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="c"># At least one request in the batch:</span>
+        <span class="n">promise</span> <span class="o">=</span> <span class="n">_send_batch_expect_response</span><span class="p">(</span><span class="n">request_ids</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+        <span class="n">promise</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">promise</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">promise</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">request_ids</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ResponseTimeout</span><span class="p">(</span><span class="s">u&#39;Wait for batch result expired.&#39;</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bsonrpc.interfaces &mdash; py-bson-rpc 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="py-bson-rpc 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">py-bson-rpc 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bsonrpc.interfaces</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Decorators for proving services.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;http://mozilla.org/MPL/2.0/&#39;</span>
+
+
+<div class="viewcode-block" id="service_class"><a class="viewcode-back" href="../../index.html#bsonrpc.service_class">[docs]</a><span class="k">def</span> <span class="nf">service_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A class decorator enabling the instances of the class to be used</span>
+<span class="sd">    as a ``services``-provider in `JSONRpc Objects`_</span>
+<span class="sd">    and `BSONRpc Objects`_.</span>
+
+<span class="sd">    Use decorators ``request``, ``notification``, ``rpc_request`` and</span>
+<span class="sd">    ``rpc_notification`` to expose methods for the RPC peer node.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">cls</span><span class="o">.</span><span class="n">_request_handlers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">cls</span><span class="o">.</span><span class="n">_notification_handlers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s">&#39;_request_handler&#39;</span><span class="p">):</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_request_handlers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s">&#39;_notification_handler&#39;</span><span class="p">):</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_notification_handlers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+    <span class="k">return</span> <span class="n">cls</span></div>
+
+
+<div class="viewcode-block" id="request"><a class="viewcode-back" href="../../index.html#bsonrpc.request">[docs]</a><span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A method decorator announcing the method to be exposed as</span>
+<span class="sd">    a request handler.</span>
+
+<span class="sd">    This decorator assumes that the method parameters are trivially</span>
+<span class="sd">    exposed to the peer node in &#39;as-is&#39; manner.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">method</span><span class="o">.</span><span class="n">_request_handler</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="notification"><a class="viewcode-back" href="../../index.html#bsonrpc.notification">[docs]</a><span class="k">def</span> <span class="nf">notification</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A method decorator announcing the method to be exposed as</span>
+<span class="sd">    a notification handler.</span>
+
+<span class="sd">    This decorator assumes that the method parameters are trivially</span>
+<span class="sd">    exposed to the peer node in &#39;as-is&#39; manner.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">method</span><span class="o">.</span><span class="n">_notification_handler</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="rpc_request"><a class="viewcode-back" href="../../index.html#bsonrpc.rpc_request">[docs]</a><span class="k">def</span> <span class="nf">rpc_request</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A method decorator announcing the method to be exposed as</span>
+<span class="sd">    a request handler.</span>
+
+<span class="sd">    This decorator assumes that the first parameter (after ``self``)</span>
+<span class="sd">    takes a BSONRpc/JSONRpc object reference as an argument, so that the method</span>
+<span class="sd">    will have an access to make RPC callbacks on the peer node (requests and</span>
+<span class="sd">    notifications) during its execution. From the second parameter onward the</span>
+<span class="sd">    parameters are exposed as-is to the peer node.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">method</span><span class="o">.</span><span class="n">_request_handler</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">method</span></div>
+
+
+<div class="viewcode-block" id="rpc_notification"><a class="viewcode-back" href="../../index.html#bsonrpc.rpc_notification">[docs]</a><span class="k">def</span> <span class="nf">rpc_notification</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A method decorator announcing the method to be exposed as</span>
+<span class="sd">    a notification handler.</span>
+
+<span class="sd">    This decorator assumes that the first parameter (after ``self``)</span>
+<span class="sd">    takes a BSONRpc/JSONRpc object reference as an argument.</span>
+<span class="sd">    From the second parameter onward the</span>
+<span class="sd">    parameters are exposed as-is to the peer node.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">method</span><span class="o">.</span><span class="n">_notification_handler</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">method</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">py-bson-rpc 0.1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Jussi Seppälä.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>
