@@ -138,6 +138,7 @@ def test_complicated_request(protocol_cls, options):
     assert result == u'a: First b: Second c: Third'
     cli.close()
     srv.join()
+    cli.join()
     assert srv_ser.history == [('complicated', 'First', 'Second', 'Third')]
     assert cli_ser.history == [('report_back', 'Hello', 'There'),
                                ('report_back', 'Other Way', 123)]

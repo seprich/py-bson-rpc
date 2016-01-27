@@ -16,11 +16,6 @@ from bsonrpc.util import BatchBuilder, PeerProxy
 __license__ = 'http://mozilla.org/MPL/2.0/'
 
 
-class DefaultServices(object):
-    _request_handlers = {}
-    _notification_handlers = {}
-
-
 class RpcBase(DefaultOptionsMixin):
 
     def __init__(self, socket, codec, services=None, **options):
@@ -172,6 +167,13 @@ class RpcBase(DefaultOptionsMixin):
         self.dispatcher.join(timeout=timeout)
 
 
+class DefaultServices(object):
+
+    _request_handlers = {}
+
+    _notification_handlers = {}
+
+
 class BSONRpc(RpcBase):
     '''
     BSON RPC Connector. Follows closely `JSON-RPC 2.0`_ specification
@@ -195,7 +197,7 @@ class BSONRpc(RpcBase):
     #: Protocol version used in messages
     protocol_version = '2.0'
 
-    def __init__(self, socket, services=DefaultServices(), **options):
+    def __init__(self, socket, services=None, **options):
         '''
         :param socket: Socket connected to the peer. (Anything behaving like
                        a socket and implementing socket methods ``close``,
@@ -213,6 +215,8 @@ class BSONRpc(RpcBase):
         .. include:: options.snippet
         '''
         self.codec = MessageCodec.BSON
+        if not services:
+            services = DefaultServices()
         super(BSONRpc, self).__init__(socket,
                                       BSONCodec(),
                                       services=services,
@@ -242,7 +246,7 @@ class JSONRpc(RpcBase):
     #: Default choice for JSON Framing
     framing_cls = JSONFramingRFC7464
 
-    def __init__(self, socket, services=DefaultServices(), **options):
+    def __init__(self, socket, services=None, **options):
         '''
         :param socket: Socket connected to the peer. (Anything behaving like
                        a socket and implementing socket methods ``close``,
@@ -271,6 +275,8 @@ class JSONRpc(RpcBase):
         .. include:: options.snippet
         '''
         self.codec = MessageCodec.JSON
+        if not services:
+            services = DefaultServices()
         framing_cls = options.get('framing_cls', self.framing_cls)
         super(JSONRpc, self).__init__(socket,
                                       JSONCodec(framing_cls.extract_message,

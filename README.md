@@ -3,7 +3,7 @@
 A Python library for JSON-RPC 2.0 and BSON-RPC on sockets (TCP & TCP+TLS).
 
 | [API doc](http://seprich.github.io/py-bson-rpc/index.html)
-| [Change Log](https://github.com/seprich/py-bson-rpc/blob/CHANGELOG.md)
+| [Change Log](./CHANGELOG.md)
 |
 
 PyPI Name: `bsonrpc`
@@ -32,10 +32,6 @@ PyPI Name: `bsonrpc`
 This library works upon python
 [`socket.socket`](https://docs.python.org/3.4/library/socket.html)
 and [`gevent.socket`](http://www.gevent.org/gevent.socket.html) (\*)
-or anything which
-[squawks](https://en.wikipedia.org/wiki/Duck_typing) like a socket.
-Specifically this library uses `close`, `recv`, `sendall` and `shutdown`
-methods of the given socket.
 
 (\*) This library can be configured to use gevent greenlets instead of python
      threads, details in
@@ -95,7 +91,7 @@ class ServerServices(object):
     return ''.join(reversed(list(txt)))
 
 # Quick-and-dirty TCP Server:
-ss = socket.socket(socket.AF_INET, socket.SOCKET_STREAM)
+ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ss.bind(('localhost', 6000))
 ss.listen(10)
 
@@ -111,7 +107,7 @@ import socket
 from bsonrpc import JSONRpc
 
 # Cut-the-corners TCP Client:
-s = socket.socket(socket.AF_INET, socket.SOCKET_STREAM)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('localhost', 6000))
 
 rpc = JSONRpc(s)
@@ -150,7 +146,7 @@ class ServerServices(object):
     return a * b * c
 
 # Quick-and-dirty TCP Server:
-ss = gsocket.socket(gsocket.AF_INET, gsocket.SOCKET_STREAM)
+ss = gsocket.socket(gsocket.AF_INET, gsocket.SOCK_STREAM)
 ss.bind(('localhost', 6000))
 ss.listen(10)
 
@@ -181,7 +177,7 @@ class ClientServices(object):
     print('Msg from server: ' + txt)
 
 # Cut-the-corners TCP Client:
-s = socket.socket(socket.AF_INET, socket.SOCKET_STREAM)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('localhost', 6000))
 
 rpc = JSONRpc(s, ClientServices())
@@ -201,10 +197,10 @@ rpc.close() # Closes the socket 's' also
 
 ## TODO
 
+* asyncio support.
 * Log sanitizer hook - allow custom filters to prevent sensitive info from
   being logged.
-* Message in- and out- processor hooks. -> Mangle the messages beyond
-  recognition if desired.
+* Message in- and out- processor hooks.
 
 ## License
 

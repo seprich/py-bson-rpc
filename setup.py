@@ -22,10 +22,9 @@ def get_version():
 setup(
     name='bsonrpc',
     version=get_version(),
-    description=('Stream transport based JSON-RPC 2.0 and BSON-RPC 2.0 '
-                 'library which is agnostic about stream implementation '
-                 'allowing TLS on TCP if desired. Supports gevent.'),
-    long_description=read('README.md'),
+    description=('JSON-RPC 2.0 and BSON-RPC 2.0 library for socket '
+                 'transports. Supports gevent.'),
+    long_description=read('doc', 'pypi-readme.rst'),
     url='http://github.com/seprich/py-bson-rpc',
     author='Jussi Seppälä',
     author_email='richard.seppala@gmail.com',

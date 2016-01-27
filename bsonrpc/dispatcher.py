@@ -57,6 +57,8 @@ class Dispatcher(object):
         self._responses = {}
         # { ("<msg_id>", "<msg_id>",): promise, ...}
         self._batch_responses = {}
+        # Active threads
+        self._active_threads = []
 
     def __getattr__(self, name):
         return getattr(self.rpc, name)
@@ -147,7 +149,7 @@ class Dispatcher(object):
         if tm is None:
             _execute()
         else:
-            spawn(tm, _execute)
+            self._active_threads.append(spawn(tm, _execute))
 
     def _handle_batch_request(self, msg, rfs):
         def _execute(promise):
@@ -162,7 +164,7 @@ class Dispatcher(object):
             _execute(promise)
         else:
             promise = new_promise(tm)
-            spawn(tm, _execute, promise)
+            self._active_threads.append(spawn(tm, _execute, promise))
         return promise
 
     def _execute_notification(self, msg, rfs, after_effects):
@@ -192,7 +194,9 @@ class Dispatcher(object):
             _execute()
             return None
         else:
-            return spawn(tm, _execute)
+            thr = spawn(tm, _execute)
+            self._active_threads.append(thr)
+            return thr
 
     def _handle_notification(self, msg):
         rfs = RpcForServices(self.rpc)
@@ -254,7 +258,7 @@ class Dispatcher(object):
                 self._log_info(
                     u'RPC closed due to invocation by Request or '
                     u'Notification handler.')
-        spawn(self.rpc.threading_model, _process)
+        self._active_threads.append(spawn(self.rpc.threading_model, _process))
 
     def _handle_batch_response(self, msgs):
         def _extract_msg_content(msg):
@@ -294,6 +298,12 @@ class Dispatcher(object):
         def _otherwise(*_):
             return True
 
+        def _is_alive(thr):
+            try:
+                return not thr.ready()
+            except AttributeError:
+                return thr.is_alive()
+
         rpcd = self.rpc.definitions
         dispatch = {
             dict: [
@@ -315,6 +325,8 @@ class Dispatcher(object):
         while True:
             try:
                 msg = self.rpc.socket_queue.get()
+                self._active_threads = list(
+                    filter(lambda t: _is_alive(t), self._active_threads))
                 if msg is None:
                     break
                 self._log_info(u'Dispatch message.')
@@ -332,4 +344,9 @@ class Dispatcher(object):
         self._log_info(u'Exit RPC message dispatcher.')
 
     def join(self, timeout=None):
-        self._thread.join(timeout)
+        def _totaljoiner():
+            self._thread.join()
+            for thr in self._active_threads:
+                thr.join()
+        joiner_thread = spawn(self.rpc.threading_model, _totaljoiner)
+        joiner_thread.join(timeout)

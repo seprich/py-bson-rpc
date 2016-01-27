@@ -196,7 +196,10 @@ class SocketQueue(object):
                 break
         self._closed = True
         self._queue.put(None)
-        self.socket.shutdown(self.SHUT_RDWR)
+        try:  # Just in case somehow socket is still open:
+            self.socket.shutdown(self.SHUT_RDWR)
+        except:
+            pass  # Probably already was shut down.
         self.socket.close()
 
     def join(self, timeout=None):
