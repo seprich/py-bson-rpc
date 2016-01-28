@@ -82,11 +82,6 @@
 <span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;http://mozilla.org/MPL/2.0/&#39;</span>
 
 
-<span class="k">class</span> <span class="nc">DefaultServices</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="n">_request_handlers</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">_notification_handlers</span> <span class="o">=</span> <span class="p">{}</span>
-
-
 <span class="k">class</span> <span class="nc">RpcBase</span><span class="p">(</span><span class="n">DefaultOptionsMixin</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">codec</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
@@ -238,6 +233,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
 
 
+<span class="k">class</span> <span class="nc">DefaultServices</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">_request_handlers</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">_notification_handlers</span> <span class="o">=</span> <span class="p">{}</span>
+
+
 <div class="viewcode-block" id="BSONRpc"><a class="viewcode-back" href="../../index.html#bsonrpc.BSONRpc">[docs]</a><span class="k">class</span> <span class="nc">BSONRpc</span><span class="p">(</span><span class="n">RpcBase</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    BSON RPC Connector. Follows closely `JSON-RPC 2.0`_ specification</span>
@@ -261,7 +263,7 @@
     <span class="c">#: Protocol version used in messages</span>
     <span class="n">protocol_version</span> <span class="o">=</span> <span class="s">&#39;2.0&#39;</span>
 
-<div class="viewcode-block" id="BSONRpc.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.BSONRpc.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="n">DefaultServices</span><span class="p">(),</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<div class="viewcode-block" id="BSONRpc.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.BSONRpc.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :param socket: Socket connected to the peer. (Anything behaving like</span>
 <span class="sd">                       a socket and implementing socket methods ``close``,</span>
@@ -279,6 +281,8 @@
 <span class="sd">        .. include:: options.snippet</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">codec</span> <span class="o">=</span> <span class="n">MessageCodec</span><span class="o">.</span><span class="n">BSON</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">services</span><span class="p">:</span>
+            <span class="n">services</span> <span class="o">=</span> <span class="n">DefaultServices</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">BSONRpc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span>
                                       <span class="n">BSONCodec</span><span class="p">(),</span>
                                       <span class="n">services</span><span class="o">=</span><span class="n">services</span><span class="p">,</span>
@@ -308,7 +312,7 @@
     <span class="c">#: Default choice for JSON Framing</span>
     <span class="n">framing_cls</span> <span class="o">=</span> <span class="n">JSONFramingRFC7464</span>
 
-<div class="viewcode-block" id="JSONRpc.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.JSONRpc.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="n">DefaultServices</span><span class="p">(),</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<div class="viewcode-block" id="JSONRpc.__init__"><a class="viewcode-back" href="../../index.html#bsonrpc.JSONRpc.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">services</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :param socket: Socket connected to the peer. (Anything behaving like</span>
 <span class="sd">                       a socket and implementing socket methods ``close``,</span>
@@ -337,6 +341,8 @@
 <span class="sd">        .. include:: options.snippet</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">codec</span> <span class="o">=</span> <span class="n">MessageCodec</span><span class="o">.</span><span class="n">JSON</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">services</span><span class="p">:</span>
+            <span class="n">services</span> <span class="o">=</span> <span class="n">DefaultServices</span><span class="p">()</span>
         <span class="n">framing_cls</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;framing_cls&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">framing_cls</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">JSONRpc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span>
                                       <span class="n">JSONCodec</span><span class="p">(</span><span class="n">framing_cls</span><span class="o">.</span><span class="n">extract_message</span><span class="p">,</span>

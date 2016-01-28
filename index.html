@@ -100,7 +100,7 @@
 <h1>JSONRpc Objects<a class="headerlink" href="#jsonrpc-objects" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="bsonrpc.JSONRpc">
-<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">JSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">JSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">bsonrpc.rpc.RpcBase</span></code></p>
 <p>JSON RPC Connector. Implements the <a class="reference external" href="http://www.jsonrpc.org/specification">JSON-RPC 2.0</a> specification.</p>
 <p>Connects via socket to RPC peer node. Provides access to the services
@@ -110,7 +110,7 @@ object of which methods are accessible to the peer node.</p>
 transport.</p>
 <dl class="method">
 <dt id="bsonrpc.JSONRpc.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#JSONRpc.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.JSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -420,7 +420,7 @@ be used in a single call.
 <h1>BSONRpc Objects<a class="headerlink" href="#bsonrpc-objects" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="bsonrpc.BSONRpc">
-<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">BSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">bsonrpc.</code><code class="descname">BSONRpc</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">bsonrpc.rpc.RpcBase</span></code></p>
 <p>BSON RPC Connector. Follows closely <a class="reference external" href="http://www.jsonrpc.org/specification">JSON-RPC 2.0</a> specification
 with only few differences:</p>
@@ -434,7 +434,7 @@ provided by the peer node and makes local services available for the peer.</p>
 (see requirements.txt)</p>
 <dl class="method">
 <dt id="bsonrpc.BSONRpc.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=&lt;bsonrpc.rpc.DefaultServices object&gt;</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>socket</em>, <em>services=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bsonrpc/rpc.html#BSONRpc.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bsonrpc.BSONRpc.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
