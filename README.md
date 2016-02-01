@@ -1,12 +1,13 @@
-# py-bson-rpc [![Build Status](https://travis-ci.org/seprich/py-bson-rpc.svg?branch=master)](https://travis-ci.org/seprich/py-bson-rpc)
+# bsonrpc
+[![PyPI version](https://badge.fury.io/py/bsonrpc.svg)](https://badge.fury.io/py/bsonrpc)
+[![Build Status](https://travis-ci.org/seprich/py-bson-rpc.svg?branch=master)](https://travis-ci.org/seprich/py-bson-rpc)
 
 A Python library for JSON-RPC 2.0 and BSON-RPC on sockets (TCP & TCP+TLS).
 
-| [API doc](http://seprich.github.io/py-bson-rpc/index.html)
-| [Change Log](./CHANGELOG.md)
+|\>\> [Quickstart](#quickstart)
+|\>\> [API doc](http://seprich.github.io/py-bson-rpc/index.html)
+|\>\> [Change Log](./CHANGELOG.md)
 |
-
-PyPI Name: `bsonrpc`
 
 
 ## Features
