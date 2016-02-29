@@ -154,7 +154,6 @@ ThreadingModel.THREADS     ThreadingModel.THREADS          None
 ThreadingModel.THREADS     ThreadingModel.THREADS          ThreadingModel.THREADS
 ThreadingModel.GEVENT      ThreadingModel.GEVENT           None
 ThreadingModel.GEVENT      ThreadingModel.GEVENT           ThreadingModel.GEVENT
-ThreadingModel.GEVENT      ThreadingModel.THREADS          None
 ========================== =============================== ====================================
 
 (*) see requirements.txt for minimal version requirements.
