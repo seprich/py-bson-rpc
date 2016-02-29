@@ -27,13 +27,18 @@ def protocol_cls(request):
 
 
 # concurrency - base-lig, request-handlers, notif-handlers
+# NOTE: Mixing gevent with threads currently at least may deadlock this
+#       library..
+#       This has to do with a promise mechanism inside the library..
+#       needs a thorough investigating on howto modify if wanted to use mixed
+#       model.
 option_combinations = [
     (ThreadingModel.THREADS, ThreadingModel.THREADS, None),
     (ThreadingModel.THREADS, ThreadingModel.THREADS, ThreadingModel.THREADS),
     (ThreadingModel.GEVENT, ThreadingModel.GEVENT, None),
     (ThreadingModel.GEVENT, ThreadingModel.GEVENT, ThreadingModel.GEVENT),
-    # TODO: Mixed models may cause problems - needs evaluation:
-    (ThreadingModel.GEVENT, ThreadingModel.THREADS, None),
+    # NOTE: Mixed model ends in deadlock - TODO would be nice if worked.
+    # (ThreadingModel.GEVENT, ThreadingModel.THREADS, None),
 ]
 
 
