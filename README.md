@@ -43,7 +43,7 @@ and [`gevent.socket`](http://www.gevent.org/gevent.socket.html) (\*)
 The creation of server sockets, accepting client connections or connecting to
 servers and all kind of connection management is left outside of this library
 in order to provide proper separation of concerns and a freedom of
-implementation, e.g. websockets, TCP or TCP with TLS (with or without client
+implementation, e.g. TCP or TCP with TLS (with or without client
 authentication) are all equally viable stream connection providers upon which
 this library builds the RPC layer.
 
