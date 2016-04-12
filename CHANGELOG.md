@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. This change
 ## [0.1.2] - 2016-04-13
 ### Fixes
 - Fix threading unstability issue related to dispatcher thread starting too early.
-  Big thanks to pchocholac for spotting this issue and contributing the fix.
+  Big thanks to [pchocholac](https://github.com/pchocholac) for spotting this issue and contributing the fix.
 
 ## [0.1.1] - 2016-01-28
 ### Fixes
