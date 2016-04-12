@@ -49,16 +49,16 @@ class Dispatcher(object):
         :param rpc: Rpc parent object.
         :type rpc: RpcBase
         '''
-        self.rpc = rpc
-        self.conn_label = six.text_type(
-            self.rpc.connection_id and '%s: ' % self.rpc.connection_id)
-        self._thread = spawn(self.rpc.threading_model, self.run)
         # {"<msg_id>": <promise>, ...}
         self._responses = {}
         # { ("<msg_id>", "<msg_id>",): promise, ...}
         self._batch_responses = {}
         # Active threads
         self._active_threads = []
+        self.rpc = rpc
+        self.conn_label = six.text_type(
+            self.rpc.connection_id and '%s: ' % self.rpc.connection_id)
+        self._thread = spawn(self.rpc.threading_model, self.run)
 
     def __getattr__(self, name):
         return getattr(self.rpc, name)
