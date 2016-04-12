@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file. This change
 
 ## [unreleased]
 
+## [0.1.2] - 2016-04-13
+### Fixes
+- Fix threading unstability issue related to dispatcher thread starting too early.
+  Big thanks to pchocholac for spotting this issue and contributing the fix.
+
 ## [0.1.1] - 2016-01-28
 ### Fixes
 - Previous bug where B/JSONRpc.join did not wait/join dispatcher notification handlers.
@@ -15,6 +20,7 @@ All notable changes to this project will be documented in this file. This change
 ### Initial Version:
 - JSON-RPC 2.0 and BSON-RPC library on sockets/gevent.sockets.
 
-[unreleased]: https://github.com/seprich/py-bson-rpc/compare/0.1.1...HEAD
+[unreleased]: https://github.com/seprich/py-bson-rpc/compare/0.1.2...HEAD
+[0.1.2]: https://github.com/seprich/py-bson-rpc/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/seprich/py-bson-rpc/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/seprich/py-bson-rpc/tree/0.1.0
