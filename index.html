@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bsonrpc - JSON/BSON RPC &mdash; py-bson-rpc 0.1.1 documentation</title>
+    <title>bsonrpc - JSON/BSON RPC &mdash; py-bson-rpc 0.2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.1',
+        VERSION:     '0.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="py-bson-rpc 0.1.1 documentation" href="#" /> 
+    <link rel="top" title="py-bson-rpc 0.2.0 documentation" href="#" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">py-bson-rpc 0.1.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">py-bson-rpc 0.2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -195,6 +195,12 @@ Choices:</p>
 <li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></li>
 </ul>
 </dd>
+<dt><strong>custom_codec_implementation</strong></dt>
+<dd>Is by default <code class="docutils literal"><span class="pre">None</span></code> in which case this library uses python default
+json library. Otherwise an alternative json codec implementation can
+be provided as an object that must have callable attributes <code class="docutils literal"><span class="pre">dumps</span></code>
+and <code class="docutils literal"><span class="pre">loads</span></code> with identical function signatures to those standard
+json library.</dd>
 </dl>
 <p>All options as well as any possible custom/extra options are
 available as attributes of the constructed class object.</p>
@@ -212,12 +218,12 @@ available as attributes of the constructed class object.</p>
 the peer node. Use <code class="docutils literal"><span class="pre">BatchBuilder()</span></code> and pass the
 object here as a parameter.</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">bb</span> <span class="o">=</span> <span class="n">BatchBuilder</span><span class="p">([</span><span class="s">&#39;swapit&#39;</span><span class="p">,</span> <span class="s">&#39;times&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;logit&#39;</span><span class="p">])</span>
-<span class="n">bb</span><span class="o">.</span><span class="n">swapit</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>    <span class="c"># request</span>
-<span class="n">bb</span><span class="o">.</span><span class="n">times</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>        <span class="c"># request</span>
-<span class="n">bb</span><span class="o">.</span><span class="n">logit</span><span class="p">(</span><span class="s">&#39;world&#39;</span><span class="p">)</span>     <span class="c"># notification</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">bb</span> <span class="o">=</span> <span class="n">BatchBuilder</span><span class="p">([</span><span class="s1">&#39;swapit&#39;</span><span class="p">,</span> <span class="s1">&#39;times&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;logit&#39;</span><span class="p">])</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">swapit</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>    <span class="c1"># request</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">times</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>        <span class="c1"># request</span>
+<span class="n">bb</span><span class="o">.</span><span class="n">logit</span><span class="p">(</span><span class="s1">&#39;world&#39;</span><span class="p">)</span>     <span class="c1"># notification</span>
 <span class="n">results</span> <span class="o">=</span> <span class="n">jsonrpc</span><span class="o">.</span><span class="n">batch_call</span><span class="p">(</span><span class="n">bb</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">15.0</span><span class="p">)</span>
-<span class="c"># results: [&#39;olleh&#39;, 15]</span>
+<span class="c1"># results: [&#39;olleh&#39;, 15]</span>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal"><span class="pre">BatchBuilder</span></code> is used and behaves like
@@ -298,15 +304,15 @@ where all attribute method calls are turned into Requests,
 except calls via <code class="docutils literal"><span class="pre">.n</span></code> which are turned into Notifications.
 Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">()</span>
-<span class="n">proxy</span><span class="o">.</span><span class="n">n</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>          <span class="c"># -&gt; Notification</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;Alise&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">n</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>          <span class="c1"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s1">&#39;Alise&#39;</span><span class="p">)</span>  <span class="c1"># -&gt; Request</span>
 </pre></div>
 </div>
 <p>But if arguments are given then the interpretation is explicit and
 <code class="docutils literal"><span class="pre">.n</span></code>-delegator is not used:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">([</span><span class="s">&#39;swap_this&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;log_this&#39;</span><span class="p">])</span>
-<span class="n">proxy</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>            <span class="c"># -&gt; Notification</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;esilA&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">([</span><span class="s1">&#39;swap_this&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;log_this&#39;</span><span class="p">])</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>            <span class="c1"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s1">&#39;esilA&#39;</span><span class="p">)</span>  <span class="c1"># -&gt; Request</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -506,6 +512,16 @@ Choices:</p>
 <li><code class="docutils literal"><span class="pre">bsonrpc.ThreadingModel.GEVENT</span></code></li>
 </ul>
 </dd>
+<dt><strong>custom_codec_implementation</strong></dt>
+<dd><p class="first">Is by default <code class="docutils literal"><span class="pre">None</span></code> in which case this library is able
+to automatically use bson codec from either pymongo or bson
+(<a class="reference external" href="https://pypi.python.org/pypi/pymongo">https://pypi.python.org/pypi/pymongo</a> or
+<a class="reference external" href="https://pypi.python.org/pypi/bson">https://pypi.python.org/pypi/bson</a>) libraries depending on
+which ever is installed on the system.</p>
+<p class="last">Otherwise if you provide a custom codec it must have callable
+attibutes (aka member methods) <code class="docutils literal"><span class="pre">dumps</span></code> and <code class="docutils literal"><span class="pre">loads</span></code> with
+function signatures identical to those of the bson:0.4.6 library.</p>
+</dd>
 </dl>
 <p>All options as well as any possible custom/extra options are
 available as attributes of the constructed class object.</p>
@@ -551,15 +567,15 @@ where all attribute method calls are turned into Requests,
 except calls via <code class="docutils literal"><span class="pre">.n</span></code> which are turned into Notifications.
 Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">()</span>
-<span class="n">proxy</span><span class="o">.</span><span class="n">n</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>          <span class="c"># -&gt; Notification</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;Alise&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">n</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>          <span class="c1"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s1">&#39;Alise&#39;</span><span class="p">)</span>  <span class="c1"># -&gt; Request</span>
 </pre></div>
 </div>
 <p>But if arguments are given then the interpretation is explicit and
 <code class="docutils literal"><span class="pre">.n</span></code>-delegator is not used:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">([</span><span class="s">&#39;swap_this&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;log_this&#39;</span><span class="p">])</span>
-<span class="n">proxy</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>            <span class="c"># -&gt; Notification</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s">&#39;esilA&#39;</span><span class="p">)</span>  <span class="c"># -&gt; Request</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">proxy</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">get_peer_proxy</span><span class="p">([</span><span class="s1">&#39;swap_this&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;log_this&#39;</span><span class="p">])</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">log_this</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>            <span class="c1"># -&gt; Notification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">swap_this</span><span class="p">(</span><span class="s1">&#39;esilA&#39;</span><span class="p">)</span>  <span class="c1"># -&gt; Request</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -750,28 +766,28 @@ into a response message has been sent to the peer node.</li>
 <span class="nd">@service_class</span>
 <span class="k">class</span> <span class="nc">MyServices</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="c"># __init__  etc..</span>
+    <span class="c1"># __init__  etc..</span>
 
     <span class="nd">@request</span>
     <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">txt</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">txt</span><span class="p">)))</span>
 
     <span class="nd">@rpc_request</span>
     <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
-        <span class="n">rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="s">&#39;report_progress&#39;</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="p">)</span>
-        <span class="n">rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="s">&#39;report_progress&#39;</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">)</span>
+        <span class="n">rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="s1">&#39;report_progress&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">rpc</span><span class="o">.</span><span class="n">invoke_notification</span><span class="p">(</span><span class="s1">&#39;report_progress&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">*</span> <span class="n">c</span>
 
     <span class="nd">@rpc_request</span>
     <span class="k">def</span> <span class="nf">final_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
-        <span class="c"># Custom attribute &#39;my_custom_label&#39;, set via options</span>
+        <span class="c1"># Custom attribute &#39;my_custom_label&#39;, set via options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">my_custom_label</span> <span class="o">+</span> <span class="n">txt</span><span class="p">)</span>
         <span class="n">rpc</span><span class="o">.</span><span class="n">close_after_response</span><span class="p">()</span>
-        <span class="k">return</span> <span class="s">&#39;Good Bye!&#39;</span>
+        <span class="k">return</span> <span class="s1">&#39;Good Bye!&#39;</span>
 
     <span class="nd">@notification</span>
     <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;From peer: &#39;</span> <span class="o">+</span> <span class="n">fmt</span> <span class="o">%</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;From peer: &#39;</span> <span class="o">+</span> <span class="n">fmt</span> <span class="o">%</span> <span class="n">args</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -790,22 +806,22 @@ implementor class for this library via options.</p>
 <dt><code class="docutils literal"><span class="pre">extract_message</span></code></dt>
 <dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">extract_message</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">)</span>
-    <span class="c"># Args:</span>
-    <span class="c">#    raw_bytes (bytes): 1 - N bytes from stream</span>
-    <span class="c"># Returns:</span>
-    <span class="c">#    bytes, bytes    (tuple of 2 (builtins.bytes))</span>
-    <span class="c">#       * The 1st value must be either:</span>
-    <span class="c">#           * None - if the given `raw_bytes`-argument does not</span>
-    <span class="c">#                    contain enough bytes to lift a complete</span>
-    <span class="c">#                    JSON message from it.</span>
-    <span class="c">#           * Unframed bytes supposedly containing exactly 1 JSON</span>
-    <span class="c">#             message.</span>
-    <span class="c">#       * The 2nd value consists of the remaining bytes of</span>
-    <span class="c">#         `raw_bytes` if/when a framed message has been lifted</span>
-    <span class="c">#         to become the unframed message in the 1st return value.</span>
-    <span class="c"># Raises:</span>
-    <span class="c">#    Library framework will coerce any raised Exceptions into</span>
-    <span class="c">#    bsonrpc.exceptions.FramingError -exceptions.</span>
+    <span class="c1"># Args:</span>
+    <span class="c1">#    raw_bytes (bytes): 1 - N bytes from stream</span>
+    <span class="c1"># Returns:</span>
+    <span class="c1">#    bytes, bytes    (tuple of 2 (builtins.bytes))</span>
+    <span class="c1">#       * The 1st value must be either:</span>
+    <span class="c1">#           * None - if the given `raw_bytes`-argument does not</span>
+    <span class="c1">#                    contain enough bytes to lift a complete</span>
+    <span class="c1">#                    JSON message from it.</span>
+    <span class="c1">#           * Unframed bytes supposedly containing exactly 1 JSON</span>
+    <span class="c1">#             message.</span>
+    <span class="c1">#       * The 2nd value consists of the remaining bytes of</span>
+    <span class="c1">#         `raw_bytes` if/when a framed message has been lifted</span>
+    <span class="c1">#         to become the unframed message in the 1st return value.</span>
+    <span class="c1"># Raises:</span>
+    <span class="c1">#    Library framework will coerce any raised Exceptions into</span>
+    <span class="c1">#    bsonrpc.exceptions.FramingError -exceptions.</span>
     <span class="k">return</span> <span class="n">msg_bytes</span><span class="p">,</span> <span class="n">rest_bytes</span>
 </pre></div>
 </div>
@@ -816,15 +832,15 @@ implementor class for this library via options.</p>
 <dt><code class="docutils literal"><span class="pre">into_frame</span></code></dt>
 <dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">into_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">message_bytes</span><span class="p">):</span>
-    <span class="c"># Args:</span>
-    <span class="c">#    message_bytes (bytes): 1 complete JSON message serialized</span>
-    <span class="c">#                           into bytes.</span>
-    <span class="c"># Returns:</span>
-    <span class="c">#    bytes</span>
-    <span class="c">#       == framed message.</span>
-    <span class="c"># Raises:</span>
-    <span class="c">#    Library framework will coerce any raised Exceptions into</span>
-    <span class="c">#    bsonrpc.exceptions.FramingError -exceptions.</span>
+    <span class="c1"># Args:</span>
+    <span class="c1">#    message_bytes (bytes): 1 complete JSON message serialized</span>
+    <span class="c1">#                           into bytes.</span>
+    <span class="c1"># Returns:</span>
+    <span class="c1">#    bytes</span>
+    <span class="c1">#       == framed message.</span>
+    <span class="c1"># Raises:</span>
+    <span class="c1">#    Library framework will coerce any raised Exceptions into</span>
+    <span class="c1">#    bsonrpc.exceptions.FramingError -exceptions.</span>
     <span class="k">return</span> <span class="n">framed_bytes</span>
 </pre></div>
 </div>
@@ -914,12 +930,12 @@ the <code class="docutils literal"><span class="pre">threading_model</span></cod
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">py-bson-rpc 0.1.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">py-bson-rpc 0.2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright 2016, Jussi Seppälä.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
     </div>
   </body>
 </html>
