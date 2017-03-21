@@ -213,14 +213,30 @@ class BSONRpc(RpcBase):
         **Available options:**
 
         .. include:: options.snippet
+
+        **custom_codec_implementation**
+          Is by default ``None`` in which case this library is able
+          to automatically use bson codec from either pymongo or bson
+          (https://pypi.python.org/pypi/pymongo or
+          https://pypi.python.org/pypi/bson) libraries depending on
+          which ever is installed on the system.
+
+          Otherwise if you provide a custom codec it must have callable
+          attibutes (aka member methods) ``dumps`` and ``loads`` with
+          function signatures identical to those of the bson:0.4.6 library.
+
+        All options as well as any possible custom/extra options are
+        available as attributes of the constructed class object.
         '''
         self.codec = MessageCodec.BSON
         if not services:
             services = DefaultServices()
-        super(BSONRpc, self).__init__(socket,
-                                      BSONCodec(),
-                                      services=services,
-                                      **options)
+        cci = options.get('custom_codec_implementation', None)
+        super(BSONRpc, self).__init__(
+                socket,
+                BSONCodec(custom_codec_implementation=cci),
+                services=services,
+                **options)
 
 
 class JSONRpc(RpcBase):
@@ -273,16 +289,29 @@ class JSONRpc(RpcBase):
           See `bsonrpc.framing`_ for details.
 
         .. include:: options.snippet
+
+        **custom_codec_implementation**
+          Is by default ``None`` in which case this library uses python default
+          json library. Otherwise an alternative json codec implementation can
+          be provided as an object that must have callable attributes ``dumps``
+          and ``loads`` with identical function signatures to those standard
+          json library.
+
+        All options as well as any possible custom/extra options are
+        available as attributes of the constructed class object.
         '''
         self.codec = MessageCodec.JSON
         if not services:
             services = DefaultServices()
         framing_cls = options.get('framing_cls', self.framing_cls)
-        super(JSONRpc, self).__init__(socket,
-                                      JSONCodec(framing_cls.extract_message,
-                                                framing_cls.into_frame),
-                                      services=services,
-                                      **options)
+        cci = options.get('custom_codec_implementation', None)
+        super(JSONRpc, self).__init__(
+                socket,
+                JSONCodec(framing_cls.extract_message,
+                          framing_cls.into_frame,
+                          custom_codec_implementation=cci),
+                services=services,
+                **options)
 
     def batch_call(self, batch_calls, timeout=None):
         '''

@@ -25,10 +25,21 @@ class BSONCodec(object):
       * No top-level arrays -> no batch support.
     '''
 
-    def __init__(self):
-        import bson
-        self._loads = lambda raw: bson.BSON.decode(bson.BSON(raw))
-        self._dumps = lambda msg: bytes(bson.BSON.encode(msg))
+    def __init__(self, custom_codec_implementation=None):
+        if custom_codec_implementation is not None:
+            self._loads = custom_codec_implementation.loads
+            self._dumps = custom_codec_implementation.dumps
+        else:
+            # Use implementation from pymongo or from pybson
+            import bson
+            if hasattr(bson, 'BSON'):
+                # pymongo
+                self._loads = lambda raw: bson.BSON.decode(bson.BSON(raw))
+                self._dumps = lambda msg: bytes(bson.BSON.encode(msg))
+            else:
+                # pybson
+                self._loads = bson.loads
+                self._dumps = bson.dumps
 
     def loads(self, b_msg):
         try:
@@ -66,12 +77,17 @@ class JSONCodec(object):
     Encode/Decode messages to/from JSON format.
     '''
 
-    def __init__(self, extractor, framer):
-        import json
-        self._loads = json.loads
-        self._dumps = json.dumps
+    def __init__(self, extractor, framer, custom_codec_implementation=None):
         self._extractor = extractor
         self._framer = framer
+        if custom_codec_implementation is not None:
+            self._loads = custom_codec_implementation.loads
+            self._dumps = custom_codec_implementation.dumps
+        else:
+            import json
+            self._loads = json.loads
+            self._dumps = json.dumps
+
 
     def loads(self, b_msg):
         try:

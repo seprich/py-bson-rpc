@@ -43,3 +43,5 @@ class DefaultOptionsMixin(object):
     no_arguments_presentation = NoArgumentsPresentation.OMIT
 
     threading_model = ThreadingModel.THREADS
+
+    custom_codec_implementation = None
