@@ -25,10 +25,13 @@ A Python library for JSON-RPC 2.0 and BSON-RPC on sockets (TCP & TCP+TLS).
   * Messages are encoded as [BSON](http://bsonspec.org/spec.html) instead
     of JSON.
   * Protocol identifier is "bsonrpc" instead of "jsonrpc".
-  * Batches are not supported since BSON doe not have top-level arrays.
+  * Batches are not supported since BSON does not have top-level arrays.
 * Benefits over JSON-RPC:
   * Binary data type. No schema gimmicks or size penalties.
   * Datetime data type. Often needed and missing from JSON.
+* This lib uses bson codec automatically either from
+  [pymongo](https://pypi.python.org/pypi/pymongo) or
+  [bson](https://pypi.python.org/pypi/bson) depending which one is installed.
 
 #### Transport
 
