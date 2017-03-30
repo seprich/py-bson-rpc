@@ -19,6 +19,8 @@ class ThreadingModel(object):
     THREADS = 'threads'
 
     GEVENT = 'gevent'
+    
+    ASYNCIO = 'asyncio'
 
 
 class NoArgumentsPresentation(object):

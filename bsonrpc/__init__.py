@@ -2,6 +2,8 @@
 '''
 Library for JSON RPC 2.0 and BSON RPC
 '''
+import six
+
 from bsonrpc.exceptions import BsonRpcError
 from bsonrpc.framing import (
     JSONFramingNetstring, JSONFramingNone, JSONFramingRFC7464)
@@ -10,6 +12,13 @@ from bsonrpc.interfaces import (
 from bsonrpc.options import NoArgumentsPresentation, ThreadingModel
 from bsonrpc.rpc import BSONRpc, JSONRpc
 from bsonrpc.util import BatchBuilder
+_asyncio_available = False
+if six.PY3:
+    try:
+        from bsonrpc.protocol import BSONRPCProtocolFactory, JSONRPCProtocolFactory
+        _asyncio_available = True
+    except ImportError:
+        pass
 
 
 __version__ = '0.2.0'
@@ -32,3 +41,8 @@ __all__ = [
     'rpc_request',
     'service_class',
 ]
+if _asyncio_available:
+    __all__.extend([
+        'BSONRPCProtocolFactory',
+        'JSONRPCProtocolFactory',
+    ])

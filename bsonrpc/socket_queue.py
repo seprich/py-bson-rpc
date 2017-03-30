@@ -5,7 +5,7 @@ JSON & BSON codecs and the SocketQueue class which uses them.
 from socket import error as socket_error
 from struct import unpack
 
-from bsonrpc.concurrent import new_lock, new_queue, spawn
+from bsonrpc.concurrent import new_queue, new_semaphore, spawn
 from bsonrpc.exceptions import (
     BsonRpcError, DecodingError, EncodingError, FramingError)
 
@@ -141,7 +141,7 @@ class SocketQueue(object):
         self.socket = socket
         self.codec = codec
         self._queue = new_queue(threading_model)
-        self._lock = new_lock(threading_model)
+        self._lock = new_semaphore(threading_model)
         self._receiver_thread = spawn(threading_model, self._receiver)
         self._closed = False
 
@@ -169,9 +169,10 @@ class SocketQueue(object):
         '''
         if self._closed:
             raise BsonRpcError('Attempt to put items to closed queue.')
-        msg_bytes = self.codec.into_frame(self.codec.dumps(item))
-        with self._lock:
-            self.socket.sendall(msg_bytes)
+        if item is not None:
+            msg_bytes = self.codec.into_frame(self.codec.dumps(item))
+            with self._lock:
+                self.socket.sendall(msg_bytes)
 
     def get(self):
         '''
@@ -188,7 +189,10 @@ class SocketQueue(object):
     def _to_queue(self, bbuffer):
         b_msg, bbuffer = self.codec.extract_message(bbuffer)
         while b_msg is not None:
-            self._queue.put(self.codec.loads(b_msg))
+            try:
+                self._queue.put(self.codec.loads(b_msg))
+            except DecodingError as e:
+                self._queue.put(e)
             b_msg, bbuffer = self.codec.extract_message(bbuffer)
         return bbuffer
 
@@ -200,8 +204,6 @@ class SocketQueue(object):
                 bbuffer = self._to_queue(bbuffer + chunk)
                 if chunk == b'':
                     break
-            except DecodingError as e:
-                self._queue.put(e)
             except (OSError, socket_error) as e:
                 # shutdown() from another greenlet
                 if e.errno != 9:

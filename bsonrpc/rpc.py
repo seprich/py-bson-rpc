@@ -18,16 +18,14 @@ __license__ = 'http://mozilla.org/MPL/2.0/'
 
 class RpcBase(DefaultOptionsMixin):
 
-    def __init__(self, socket, codec, services=None, **options):
+    def __init__(self, socket_queue, services, **options):
         assert (hasattr(services, '_request_handlers') and
                 hasattr(services, '_notification_handlers'))
-        for key, value in options.items():
-            setattr(self, key, value)
         self.definitions = Definitions(self.protocol,
                                        self.protocol_version,
                                        self.no_arguments_presentation)
         self.services = services
-        self.socket_queue = SocketQueue(socket, codec, self.threading_model)
+        self.socket_queue = socket_queue
         self.dispatcher = Dispatcher(self)
 
     @property
@@ -229,14 +227,14 @@ class BSONRpc(RpcBase):
         available as attributes of the constructed class object.
         '''
         self.codec = MessageCodec.BSON
+        for key, value in options.items():
+            setattr(self, key, value)
         if not services:
             services = DefaultServices()
-        cci = options.get('custom_codec_implementation', None)
-        super(BSONRpc, self).__init__(
-                socket,
-                BSONCodec(custom_codec_implementation=cci),
-                services=services,
-                **options)
+        bson_codec = BSONCodec(
+            custom_codec_implementation=self.custom_codec_implementation)
+        socket_queue = SocketQueue(socket, bson_codec, self.threading_model)
+        super(BSONRpc, self).__init__(socket_queue, services, **options)
 
 
 class JSONRpc(RpcBase):
@@ -301,17 +299,16 @@ class JSONRpc(RpcBase):
         available as attributes of the constructed class object.
         '''
         self.codec = MessageCodec.JSON
+        for key, value in options.items():
+            setattr(self, key, value)
         if not services:
             services = DefaultServices()
-        framing_cls = options.get('framing_cls', self.framing_cls)
-        cci = options.get('custom_codec_implementation', None)
-        super(JSONRpc, self).__init__(
-                socket,
-                JSONCodec(framing_cls.extract_message,
-                          framing_cls.into_frame,
-                          custom_codec_implementation=cci),
-                services=services,
-                **options)
+        json_codec = JSONCodec(
+            self.framing_cls.extract_message,
+            self.framing_cls.into_frame,
+            custom_codec_implementation=self.custom_codec_implementation)
+        socket_queue = SocketQueue(socket, json_codec, self.threading_model)
+        super(JSONRpc, self).__init__(socket_queue, services, **options)
 
     def batch_call(self, batch_calls, timeout=None):
         '''
