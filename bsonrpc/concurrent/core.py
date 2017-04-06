@@ -19,7 +19,7 @@ if six.PY3:
         alib = None
 else:
     alib = None
-from bsonrpc.concurrent.util import Promise
+from bsonrpc.concurrent.util import Promise, Either
 from bsonrpc.options import ThreadingModel
 from threading import Event, Semaphore, Thread
 from six.moves.queue import Queue
@@ -91,48 +91,52 @@ def new_promise(threading_model):
         _sanity(threading_model)
         raise e
 
-
-class Tasker(object):
+    
+class Tasking(object):
     
     def __init__(self, threading_model, quotas={}):
         self._model = threading_model
-        self._lock = new_semaphore(threading_model)
         self._quotas = {
             k: new_semaphore(threading_model, v)
-            for k, v in quotas.items() if isinstance(v, six.integer_types)
+            for k, v in quotas.items()
+            if isinstance(v, six.integer_types) and v >= 0
         }
-        self._idx = 0
+        self._lock = new_semaphore(threading_model)
+        self._active_threads = []
         
-    def _next_index(self):
+    def _add_thread(self, thr):
+        def _is_alive(thr):
+            return ((self._model == ThreadingModel.GEVENT and not thr.ready()) or
+                    (self._model == ThreadingModel.THREADS and thr.is_alive()))
+
         with self._lock:
-            self._idx = (self._idx + 1) % sys.maxsize
-            return self._idx
+            # Cleanup
+            self._active_threads = list(filter(lambda t: _is_alive(t), self._active_threads))
+            # Add
+            self._active_threads.append(thr)
+
+    def _routine(self, group, promise, fn, *args, **kwargs):
+        try:
+            result = fn(*args, **kwargs)
+            promise.set(Either.Left(result))
+        except Exception as e:
+            promise.set(Either.Right(e))
+        if group in self._quotas:
+            self._quotas[group].release()
         
-    
+    def spawn_task(self, group, fn, *args, **kwargs):
+        if group in self._quotas:
+            # yield from
+            self._quotas[group].acquire()
+        promise = new_promise(self._model)
+        thr = spawn(self._model, self._routine, group, promise, fn, *args, **kwargs)
+        self._add_thread(thr)
+        return promise
         
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    def join(self, timeout=None):
+        def _totaljoiner():
+            with self._lock:
+                for thr in self._active_threads:
+                    thr.join()
+        joiner_thread = spawn(self._model, _totaljoiner)
+        joiner_thread.join(timeout)

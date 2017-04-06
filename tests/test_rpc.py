@@ -30,12 +30,10 @@ def protocol_cls(request):
 
 if tmodel == 'threads':
     option_combinations = [
-        (ThreadingModel.THREADS, ThreadingModel.THREADS, None),
         (ThreadingModel.THREADS, ThreadingModel.THREADS, ThreadingModel.THREADS),
     ]
 elif tmodel == 'gevent':
     option_combinations = [
-        (ThreadingModel.GEVENT, ThreadingModel.GEVENT, None),
         (ThreadingModel.GEVENT, ThreadingModel.GEVENT, ThreadingModel.GEVENT),
     ]
 else:

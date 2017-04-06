@@ -26,10 +26,7 @@ class RpcBase(DefaultOptionsMixin):
                                        self.no_arguments_presentation)
         self.services = services
         self.socket_queue = socket_queue
-        self.dispatcher = self._new_dispatcher()
-        
-    def _new_dispatcher(self):
-        return Dispatcher(self)
+        self.dispatcher = Dispatcher(self)
 
     @property
     def is_closed(self):
@@ -238,6 +235,7 @@ class BSONRpc(RpcBase):
             custom_codec_implementation=self.custom_codec_implementation)
         socket_queue = SocketQueue(socket, bson_codec, self.threading_model)
         super(BSONRpc, self).__init__(socket_queue, services, **options)
+        self.dispatcher.start()
 
 
 class JSONRpc(RpcBase):
@@ -312,6 +310,7 @@ class JSONRpc(RpcBase):
             custom_codec_implementation=self.custom_codec_implementation)
         socket_queue = SocketQueue(socket, json_codec, self.threading_model)
         super(JSONRpc, self).__init__(socket_queue, services, **options)
+        self.dispatcher.start()
 
     def batch_call(self, batch_calls, timeout=None):
         '''

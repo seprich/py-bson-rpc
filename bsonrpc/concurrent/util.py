@@ -32,3 +32,40 @@ class Promise(object):
             raise RuntimeError(
                 u'Promise timeout after %.02f seconds.' % timeout)
         return self._value
+
+
+class Either(object):
+    
+    @staticmethod
+    def Left(value):
+        return Left(value)
+    
+    @staticmethod
+    def Right(value):
+        return Right(value)
+    
+    def is_left(self):
+        return isinstance(self, Left)
+    
+    def is_right(self):
+        return isinstance(self, Right)
+
+
+class Left(Either):
+        
+    def __init__(self, value):
+        self._value = value
+        
+    @property
+    def left(self):
+        return self._value
+
+
+class Right(Either):
+        
+    def __init__(self, value):
+        self._value = value
+        
+    @property
+    def right(self):
+        return self._value
