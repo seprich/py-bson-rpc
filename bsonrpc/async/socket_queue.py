@@ -26,23 +26,21 @@ class ProtocolQueue(object):
             self._transport.close()
         self._is_closed = True
 
-    @asyncio.coroutine
     def _to_queue(self, bbuffer):
         b_msg, bbuffer = self._codec.extract_message(bbuffer)
         while b_msg is not None:
             try:
-                yield from self._queue.put(self._codec.loads(b_msg))
+                self._queue.put(self._codec.loads(b_msg))
             except DecodingError as e:
-                yield from self._queue.put(e)
+                self._queue.put(e)
             b_msg, bbuffer = self._codec.extract_message(bbuffer)
         return bbuffer
 
-    @asyncio.coroutine
     def data_received(self, data):
         try:
-            self._bbuffer = yield from self._to_queue(self._bbuffer + data)
+            self._bbuffer = self._to_queue(self._bbuffer + data)
         except Exception as e:
-            yield from self._queue.put(e)
+            self._queue.put(e)
             self._close_transport()
 
     @asyncio.coroutine
@@ -65,11 +63,10 @@ class ProtocolQueue(object):
                 msg_bytes = self._codec.into_frame(self._codec.dumps(item))
                 self._transport.write(msg_bytes)
 
-    @asyncio.coroutine
     def connection_lost(self, exc):
         if exc:
-            yield from self._queue.put(exc)
-        yield from self._queue.put(None)
+            self._queue.put(exc)
+        self._queue.put(None)
         self._is_closed = True
 
     @property

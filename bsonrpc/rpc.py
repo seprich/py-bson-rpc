@@ -26,7 +26,10 @@ class RpcBase(DefaultOptionsMixin):
                                        self.no_arguments_presentation)
         self.services = services
         self.socket_queue = socket_queue
-        self.dispatcher = Dispatcher(self)
+        self.dispatcher = self._new_dispatcher()
+        
+    def _new_dispatcher(self):
+        return Dispatcher(self)
 
     @property
     def is_closed(self):

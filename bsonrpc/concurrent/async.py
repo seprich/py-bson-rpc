@@ -20,8 +20,12 @@ class AsyncPromise(Promise):
 
 
 @asyncio.coroutine
-def spawn_coroutine(fn, *args, **kwargs):
+def _ensure_coroutine(fn, *args, **kwargs):
     return fn(*args, **kwargs)
+
+
+def spawn_coroutine(fn, *args, **kwargs):
+    return asyncio.ensure_future(_ensure_coroutine(fn, *args, **kwargs))
 
 
 def new_asyncio_semaphore(*args, **kwargs):

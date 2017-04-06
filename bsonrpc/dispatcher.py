@@ -49,16 +49,17 @@ class Dispatcher(object):
         :param rpc: Rpc parent object.
         :type rpc: RpcBase
         '''
+        self.rpc = rpc
         # {"<msg_id>": <promise>, ...}
         self._responses = {}
         # { ("<msg_id>", "<msg_id>",): promise, ...}
         self._batch_responses = {}
-        # Active threads
-        self._active_threads = []
-        self.rpc = rpc
         self.conn_label = six.text_type(
             self.rpc.connection_id and '%s: ' % self.rpc.connection_id)
+        # Concurrency
         self._thread = spawn(self.rpc.threading_model, self.run)
+        # Active worker threads
+        self._active_threads = []
 
     def __getattr__(self, name):
         return getattr(self.rpc, name)
@@ -293,17 +294,8 @@ class Dispatcher(object):
             self._log_error(
                 u'Unrecognized/expired batch response from peer: ' +
                 six.text_type(msgs))
-
-    def run(self):
-        def _otherwise(*_):
-            return True
-
-        def _is_alive(thr):
-            try:
-                return not thr.ready()
-            except AttributeError:
-                return thr.is_alive()
-
+            
+    def _resolve_message_handler(self, msg):
         rpcd = self.rpc.definitions
         dispatch = {
             dict: [
@@ -312,33 +304,40 @@ class Dispatcher(object):
                 (rpcd.is_response, self._handle_response),
                 (rpcd.is_nil_id_error_response,
                     self._handle_nil_id_error_response),
-                (_otherwise, self._handle_schema_error),
             ],
             list: [
                 (rpcd.is_batch_request, self._dispatch_batch),
                 (rpcd.is_batch_response, self._handle_batch_response),
-                (_otherwise, self._handle_schema_error),
             ]
         }
+        for match_fn, handler_fn in dispatch.get(type(msg), []):
+            if match_fn(msg):
+                return handler_fn
+        return self._handle_schema_error
+    
+    def _cleanup_active_threads(self):
+        def _is_alive(thr):
+            try:
+                return not thr.ready()
+            except AttributeError:
+                return thr.is_alive()
 
+        self._active_threads = list(
+            filter(lambda t: _is_alive(t), self._active_threads))
+
+    def run(self):
         self._log_info(u'Start RPC message dispatcher.')
         while True:
             try:
                 msg = self.rpc.socket_queue.get()
-                self._active_threads = list(
-                    filter(lambda t: _is_alive(t), self._active_threads))
+                self._cleanup_active_threads()
                 if msg is None:
                     break
                 self._log_info(u'Dispatch message.')
                 if isinstance(msg, Exception):
                     self._handle_parse_error(msg)
                 else:
-                    for match_fn, handler_fn in dispatch.get(
-                            type(msg),
-                            [(_otherwise, self._handle_schema_error)]):
-                        if match_fn(msg):
-                            handler_fn(msg)
-                            break
+                    self._resolve_message_handler(msg)(msg)
             except Exception as e:
                 self._log_error(e)
         self._log_info(u'Exit RPC message dispatcher.')

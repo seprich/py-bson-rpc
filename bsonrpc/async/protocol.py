@@ -4,11 +4,12 @@
 import asyncio
     
 from asyncio import Queue
+from bsonrpc.async.rpc import AsyncRpcBase
 from bsonrpc.async.socket_queue import ProtocolQueue
+from bsonrpc.concurrent.async import spawn_coroutine
 from bsonrpc.exceptions import BsonRpcError, DecodingError
 from bsonrpc.framing import JSONFramingRFC7464
 from bsonrpc.options import MessageCodec
-from bsonrpc.rpc import RpcBase
 from bsonrpc.socket_queue import BSONCodec, JSONCodec
 
 __license__ = 'http://mozilla.org/MPL/2.0/'
@@ -42,7 +43,7 @@ class TransportInfo(object):
             self.transport_info[key] = transport.get_extra_info(key, None)
 
 
-class BSONRPCProtocol(RpcBase, TransportInfo, asyncio.Protocol):
+class BSONRPCProtocol(AsyncRpcBase, TransportInfo, asyncio.Protocol):
 
     protocol = 'bsonrpc'
     protocol_version = '2.0'
@@ -66,8 +67,8 @@ class BSONRPCProtocol(RpcBase, TransportInfo, asyncio.Protocol):
     def connection_made(self, transport):
         self._collect_transport_info(transport)
         self._transport._set(transport)
-        if self.loop and callable(self._with_connection):
-            self.loop.call_soon(self._with_connection, self)
+        if self._with_connection:
+            spawn_coroutine(self._with_connection, self)
 
     def connection_lost(self, exc):
         self._protocol_queue.connection_lost(exc)
@@ -76,7 +77,7 @@ class BSONRPCProtocol(RpcBase, TransportInfo, asyncio.Protocol):
         self._protocol_queue.data_received(data)
 
 
-class JSONRPCProtocol(RpcBase, TransportInfo, asyncio.Protocol):
+class JSONRPCProtocol(AsyncRpcBase, TransportInfo, asyncio.Protocol):
 
     protocol = 'jsonrpc'
     protocol_version = '2.0'
@@ -103,8 +104,8 @@ class JSONRPCProtocol(RpcBase, TransportInfo, asyncio.Protocol):
     def connection_made(self, transport):
         self._collect_transport_info(transport)
         self._transport._set(transport)
-        if self.loop and callable(self._with_connection):
-            self.loop.call_soon(self._with_connection, self)
+        if self._with_connection:
+            spawn_coroutine(self._with_connection, self)
 
     def connection_lost(self, exc):
         self._protocol_queue.connection_lost(exc)
@@ -136,11 +137,11 @@ class _Factory(object):
 
 class BSONRPCProtocolFactory(_Factory):
 
-    def __init__(self, loop=None, services_factory=None, with_connection=None, **options):
+    def __init__(self, loop, services_factory=None, with_connection=None, **options):
         super(BSONRPCProtocolFactory, self).__init__(BSONRPCProtocol, loop, services_factory, with_connection, **options)
 
 
 class JSONRPCProtocolFactory(_Factory):
 
-    def __init__(self, loop=None, services_factory=None, with_connection=None, **options):
+    def __init__(self, loop, services_factory=None, with_connection=None, **options):
         super(JSONRPCProtocolFactory, self).__init__(JSONRPCProtocol, loop, services_factory, with_connection, **options)
