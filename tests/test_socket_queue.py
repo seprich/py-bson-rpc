@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
+import os
 import pytest
-
-import socket as tsocket
-import gevent.socket as gsocket
 
 from bsonrpc.exceptions import DecodingError, EncodingError, FramingError
 from bsonrpc.framing import (
     JSONFramingNetstring, JSONFramingNone, JSONFramingRFC7464)
 from bsonrpc.options import ThreadingModel
 from bsonrpc.socket_queue import BSONCodec, JSONCodec, SocketQueue
+
+tmodel = os.environ['TT']
+if tmodel == 'threads':
+    import socket
+if tmodel == 'gevent':
+    import gevent.socket as socket
 
 
 msg1 = {
@@ -72,16 +76,13 @@ def test_codec_exceptions(codec):
 
 
 @pytest.fixture(scope='module',
-                params=[ThreadingModel.THREADS, ThreadingModel.GEVENT])
+                params=[tmodel])
 def threading_model(request):
     return request.param
 
 
 def _socketpair(tmodel):
-    if tmodel == ThreadingModel.THREADS:
-        return tsocket.socketpair()
-    elif tmodel == ThreadingModel.GEVENT:
-        return gsocket.socketpair()
+    return socket.socketpair()
 
 
 def test_socket_queue_basics(codec, threading_model):

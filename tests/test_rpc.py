@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+import os
 import pytest
 import six
 
-import socket as tsocket
-import gevent.socket as gsocket
+tmodel = os.environ['TT']
+
+if tmodel == 'threads':
+    import socket
+if tmodel == 'gevent': 
+    import gevent.socket as socket
 
 from bsonrpc.exceptions import ServerError
 from bsonrpc.interfaces import (
@@ -14,10 +19,7 @@ from bsonrpc.util import BatchBuilder
 
 
 def _socketpair(tmodel):
-    if tmodel == ThreadingModel.THREADS:
-        return tsocket.socketpair()
-    elif tmodel == ThreadingModel.GEVENT:
-        return gsocket.socketpair()
+    return socket.socketpair()
 
 
 @pytest.fixture(scope='module',
@@ -26,20 +28,18 @@ def protocol_cls(request):
     return request.param
 
 
-# concurrency - base-lig, request-handlers, notif-handlers
-# NOTE: Mixing gevent with threads currently at least may deadlock this
-#       library..
-#       This has to do with a promise mechanism inside the library..
-#       needs a thorough investigating on howto modify if wanted to use mixed
-#       model.
-option_combinations = [
-    (ThreadingModel.THREADS, ThreadingModel.THREADS, None),
-    (ThreadingModel.THREADS, ThreadingModel.THREADS, ThreadingModel.THREADS),
-    (ThreadingModel.GEVENT, ThreadingModel.GEVENT, None),
-    (ThreadingModel.GEVENT, ThreadingModel.GEVENT, ThreadingModel.GEVENT),
-    # NOTE: Mixed model ends in deadlock - TODO would be nice if worked.
-    # (ThreadingModel.GEVENT, ThreadingModel.THREADS, None),
-]
+if tmodel == 'threads':
+    option_combinations = [
+        (ThreadingModel.THREADS, ThreadingModel.THREADS, None),
+        (ThreadingModel.THREADS, ThreadingModel.THREADS, ThreadingModel.THREADS),
+    ]
+elif tmodel == 'gevent':
+    option_combinations = [
+        (ThreadingModel.GEVENT, ThreadingModel.GEVENT, None),
+        (ThreadingModel.GEVENT, ThreadingModel.GEVENT, ThreadingModel.GEVENT),
+    ]
+else:
+    option_combinations = []
 
 
 @pytest.fixture(scope='module',

@@ -125,9 +125,8 @@ class Dispatcher(object):
             #       inside the executed function. Python just does not provide
             #       enough granularity to make the distinction. (And grepping
             #       content is a messy heuristics and thus not acceptable.)
-            # TODO: The inspect.signature may provide a deterministic way to
-            #       correctly identify the "invalid params" case. Consider
-            #       using it. Far from trivial though.
+            #
+            # TODO: collect ArgSpec:s with inspect.getargspec()
         except Exception as e:
             return self.rpc.definitions.error_response(
                 msg_id, RpcErrors.server_error, six.text_type(e))
