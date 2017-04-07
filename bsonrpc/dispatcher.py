@@ -75,6 +75,7 @@ class Dispatcher(object):
     def _log_error(self, msg, *args, **kwargs):
         logging.error(self.conn_label + six.text_type(msg), *args, **kwargs)
 
+    #### <BOOKKEEPERS>
     def register(self, msg_id):
         promise = new_promise(self.rpc.threading_model)
         if isinstance(msg_id, tuple):
@@ -94,16 +95,8 @@ class Dispatcher(object):
                 del self._responses[msg_id]
         if promise and not promise.is_set():
             promise.set(BsonRpcError('Timeout'))
-
-    def _handle_parse_error(self, exception):
-        try:
-            self.rpc.socket_queue.put(
-                self.rpc.definitions.error_response(
-                    None, RpcErrors.parse_error, six.text_type(exception)))
-        except:
-            pass  # Effort made, success not required.
-        self._log_error(exception)
-
+    #### </BOOKKEEPERS>
+    
     def _get_params(self, msg):
         if 'params' not in msg:
             return [], {}
@@ -219,17 +212,9 @@ class Dispatcher(object):
                 u'Unrecognized/expired response from peer: ' +
                 six.text_type(msg))
 
-    def _handle_nil_id_error_response(self, msg):
-        self._log_error(msg)
+    
 
-    def _handle_schema_error(self, msg):
-        msg_id = None
-        if isinstance(msg.get('id'), (six.string_types, int)):
-            msg_id = msg['id']
-        self.rpc.socket_queue.put(
-            self.rpc.definitions.error_response(
-                msg_id, RpcErrors.invalid_request))
-        self._log_error(u'Invalid Request: ' + six.text_type(msg))
+    
 
     def _dispatch_batch(self, msgs):
         def _process():
@@ -299,6 +284,24 @@ class Dispatcher(object):
                 u'Unrecognized/expired batch response from peer: ' +
                 six.text_type(msgs))
             
+    def _handle_parse_error(self, exception):
+        try:
+            self.rpc.socket_queue.put(
+                self.rpc.definitions.error_response(
+                    None, RpcErrors.parse_error, six.text_type(exception)))
+        except:
+            pass  # Effort made, success not required.
+        self._log_error(exception)
+        
+    def _handle_schema_error(self, msg):
+        msg_id = None
+        if isinstance(msg.get('id'), (six.string_types, int)):
+            msg_id = msg['id']
+        self.rpc.socket_queue.put(
+            self.rpc.definitions.error_response(
+                msg_id, RpcErrors.invalid_request))
+        self._log_error(u'Invalid Request: ' + six.text_type(msg))
+            
     def _resolve_message_handler(self, msg):
         rpcd = self.rpc.definitions
         dispatch = {
@@ -306,8 +309,7 @@ class Dispatcher(object):
                 (rpcd.is_request, self._handle_request),
                 (rpcd.is_notification, self._handle_notification),
                 (rpcd.is_response, self._handle_response),
-                (rpcd.is_nil_id_error_response,
-                    self._handle_nil_id_error_response),
+                (rpcd.is_nil_id_error_response, self._log_error),
             ],
             list: [
                 (rpcd.is_batch_request, self._dispatch_batch),
