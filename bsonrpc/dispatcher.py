@@ -112,6 +112,22 @@ class Dispatcher(object):
             return params, {}
         if isinstance(params, dict):
             return [], params
+        
+    def _is_compatible(self, method, args, kwargs):
+        spec = method._argspec
+        possible_args = (spec.args[2:] if method._with_rpc else  spec.args[1:])
+        required_args = possible_args[-(len(spec.defaults) if spec.defaults else 0):]
+        if len(args):
+            return (len(args) >= len(required_args) and
+                    (len(args) <= len(possible_args) or spec.varargs))
+        elif len(kwargs):
+            all_present = set(kwargs.keys())
+            if not set(required_args).issubset(all_present):
+                return False
+            extras_present = all_present.difference(set(possible_args))
+            return (spec.keywords is not None or not extras_present)
+        else:
+            return (len(required_args) == 0)
 
     def _execute_request(self, msg, rfs):
         msg_id = msg['id']
@@ -120,18 +136,14 @@ class Dispatcher(object):
         try:
             method = self.rpc.services._request_handlers.get(method_name)
             if method:
+                if not self._is_compatible(method, args, kwargs):
+                    return self.rpc.definitions.error_response(
+                        msg_id, RpcErrors.invalid_params)
                 result = method(self.rpc.services, rfs, *args, **kwargs)
                 return self.rpc.definitions.ok_response(msg_id, result)
             else:
                 return self.rpc.definitions.error_response(
                     msg_id, RpcErrors.method_not_found)
-            # NOTE: Python raises TypeError in the "invalid params" case but
-            #       that exception may also originate from any number of places
-            #       inside the executed function. Python just does not provide
-            #       enough granularity to make the distinction. (And grepping
-            #       content is a messy heuristics and thus not acceptable.)
-            #
-            # TODO: collect ArgSpec:s with inspect.getargspec()
         except Exception as e:
             return self.rpc.definitions.error_response(
                 msg_id, RpcErrors.server_error, six.text_type(e))

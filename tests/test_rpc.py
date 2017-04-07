@@ -10,7 +10,7 @@ if tmodel == 'threads':
 if tmodel == 'gevent': 
     import gevent.socket as socket
 
-from bsonrpc.exceptions import ServerError
+from bsonrpc.exceptions import InvalidParams, ServerError
 from bsonrpc.interfaces import (
     notification, request, rpc_request, service_class)
 from bsonrpc.options import ThreadingModel
@@ -182,8 +182,8 @@ def test_batch(options):
     results = cli.batch_call(b3)
     assert len(results) == 4
     assert results[0] == 12
-    assert isinstance(results[1], ServerError)
-    assert isinstance(results[2], ServerError)
+    assert isinstance(results[1], InvalidParams)
+    assert isinstance(results[2], InvalidParams)
     assert results[3] == 'GnihtemoS'
     srv.join(1.0)
     cli.join(1.0)

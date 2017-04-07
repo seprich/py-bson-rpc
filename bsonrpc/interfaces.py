@@ -2,6 +2,7 @@
 '''
 Decorators for proving services.
 '''
+import inspect
 from functools import wraps
 
 __license__ = 'http://mozilla.org/MPL/2.0/'
@@ -35,6 +36,8 @@ def request(method):
     exposed to the peer node in 'as-is' manner.
     '''
     method._request_handler = True
+    method._argspec = inspect.getargspec(method)
+    method._with_rpc = False
 
     @wraps(method)
     def wrapper(self, rpc, *args, **kwargs):
@@ -51,6 +54,8 @@ def notification(method):
     exposed to the peer node in 'as-is' manner.
     '''
     method._notification_handler = True
+    method._argspec = inspect.getargspec(method)
+    method._with_rpc = False
 
     @wraps(method)
     def wrapper(self, rpc, *args, **kwargs):
@@ -70,6 +75,8 @@ def rpc_request(method):
     parameters are exposed as-is to the peer node.
     '''
     method._request_handler = True
+    method._argspec = inspect.getargspec(method)
+    method._with_rpc = True
     return method
 
 
@@ -84,4 +91,6 @@ def rpc_notification(method):
     parameters are exposed as-is to the peer node.
     '''
     method._notification_handler = True
+    method._argspec = inspect.getargspec(method)
+    method._with_rpc = True
     return method
