@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 '''
 '''
+
+import six
+
 __license__ = 'http://mozilla.org/MPL/2.0/'
 
 
+@six.python_2_unicode_compatible
 class Promise(object):
 
     def __init__(self, event):
@@ -32,8 +36,14 @@ class Promise(object):
             raise RuntimeError(
                 u'Promise timeout after %.02f seconds.' % timeout)
         return self._value
+    
+    def __str__(self):
+        if self.is_set():
+            return u'%s(is_set: True, value: %s)' % (self.__class__.__name__, six.text_type(self.value))
+        return u'%s(is_set: False)' % self.__class__.__name__
 
 
+@six.python_2_unicode_compatible
 class Either(object):
     
     @staticmethod
@@ -49,6 +59,9 @@ class Either(object):
     
     def is_right(self):
         return isinstance(self, Right)
+    
+    def __str__(self):
+        return u'%s(value: %s)' % (self.__class__.__name__, six.text_type(self._value))
 
 
 class Left(Either):

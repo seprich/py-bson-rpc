@@ -142,58 +142,47 @@ class Dispatcher(object):
                 msg_id, RpcErrors.server_error, six.text_type(e))
 
     def _handle_request(self, msg):
-        def _execute():
-            self._log_info(u'Received request: ' + six.text_type(msg))
-            rfs = RpcForServices(self.rpc)
-            response = self._execute_request(msg, rfs)
-            if rfs.aborted:
-                self._log_info(u'Connection aborted in request handler.')
-                return
-            self.rpc.socket_queue.put(response)
-            self._log_info(u'Sent response: ' + six.text_type(response))
-            if rfs.close_after_response_requested:
-                self.rpc.close()
-                self._log_info(
-                    u'RPC closed due to invocation by Request handler.')
-        # FIXME:
-        self._tasking.spawn_task(self.gid_handlers, _execute)
+        self._log_info(u'Received request: ' + six.text_type(msg))
+        rfs = RpcForServices(self.rpc)
+        response = self._execute_request(msg, rfs)
+        if rfs.aborted:
+            self._log_info(u'Connection aborted in request handler.')
+            return
+        self.rpc.socket_queue.put(response)
+        self._log_info(u'Sent response: ' + six.text_type(response))
+        if rfs.close_after_response_requested:
+            self.rpc.close()
+            self._log_info(
+                u'RPC closed due to invocation by Request handler.')
 
     def _handle_batch_request(self, msg, rfs):
-        def _execute(promise):
-            self._log_info(u'Handling batch request: ' + six.text_type(msg))
-            response = self._execute_request(msg, rfs)
-            self._log_info(
-                u'Generated batch response: ' + six.text_type(response))
-            promise.set(response)
-        # FIXME:
-        promise = new_promise(self.rpc.threading_model)
-        self._tasking.spawn_task(self.gid_handlers, _execute, promise)
-        return promise
+        self._log_info(u'Handling batch request: ' + six.text_type(msg))
+        response = self._execute_request(msg, rfs)
+        self._log_info(
+            u'Generated batch response: ' + six.text_type(response))
+        return response
 
     def _execute_notification(self, msg, rfs, after_effects):
-        def _execute():
-            method_name = msg['method']
-            args, kwargs = self._get_params(msg)
-            method = self.rpc.services._notification_handlers.get(method_name)
-            if method:
-                try:
-                    self._log_info(
-                        u'Received notification: ' + six.text_type(msg))
-                    method(self.rpc.services, rfs, *args, **kwargs)
-                except Exception as e:
-                    self._log_error(e)
-                if (after_effects and not rfs.aborted and
-                        rfs.close_after_response_requested):
-                    self.rpc.close()
-                    self._log_info(
-                        u'RPC closed due to invocation by '
-                        u'Notification handler.')
-            else:
-                self._log_error(
-                    u'Unrecognized notification from peer: ' +
-                    six.text_type(msg))
-        # FIXME:
-        self._tasking.spawn_task(self.gid_handlers, _execute)
+        method_name = msg['method']
+        args, kwargs = self._get_params(msg)
+        method = self.rpc.services._notification_handlers.get(method_name)
+        if method:
+            try:
+                self._log_info(
+                    u'Received notification: ' + six.text_type(msg))
+                method(self.rpc.services, rfs, *args, **kwargs)
+            except Exception as e:
+                self._log_error(e)
+            if (after_effects and not rfs.aborted and
+                    rfs.close_after_response_requested):
+                self.rpc.close()
+                self._log_info(
+                    u'RPC closed due to invocation by '
+                    u'Notification handler.')
+        else:
+            self._log_error(
+                u'Unrecognized notification from peer: ' +
+                six.text_type(msg))
 
     def _handle_notification(self, msg):
         rfs = RpcForServices(self.rpc)
@@ -213,42 +202,40 @@ class Dispatcher(object):
                 six.text_type(msg))
 
     
-
-    
-
     def _dispatch_batch(self, msgs):
-        def _process():
-            self._log_info(u'Received batch: ' + six.text_type(msgs))
-            rfs = RpcForServices(self.rpc)
-            promises = []
-            nthreads = []
-            for msg in msgs:
-                if 'id' in msg:
-                    promises.append(self._handle_batch_request(msg, rfs))
-                else:
-                    nthreads.append(
-                        self._execute_notification(msg, rfs, False))
-            results = list(map(lambda p: p.wait(), promises))
-            if results:
-                if rfs.aborted:
-                    self._log_info(
-                        'Connection aborted during batch processing.')
-                    return
-                self.rpc.socket_queue.put(results)
-                self._log_info(
-                    u'Sent batch response: ' + six.text_type(results))
+        self._log_info(u'Received batch: ' + six.text_type(msgs))
+        rfs = RpcForServices(self.rpc)
+        promises = []
+        #nthreads = []
+        for msg in msgs:
+            if 'id' in msg:
+                promises.append(self._tasking.spawn_task(self.gid_handlers, self._handle_batch_request, msg, rfs))
+                #promises.append(self._handle_batch_request(msg, rfs))
             else:
-                self._log_info(u'Notification-only batch processed.')
-            if not rfs.close_after_response_requested:
-                for nthread in [t for t in nthreads if t]:
-                    nthread.join()
-            if rfs.close_after_response_requested:
-                self.rpc.close()
+                self._tasking.spawn_task(self.gid_handlers, self._execute_notification, msg, rfs, False)
+                #nthreads.append(
+                #    self._execute_notification(msg, rfs, False))
+        results = list(map(lambda p: p.wait(), promises))
+        results = list(map(lambda x: x.left, results))
+        if results:
+            if rfs.aborted:
                 self._log_info(
-                    u'RPC closed due to invocation by Request or '
-                    u'Notification handler.')
-        # FIXME:
-        self._tasking.spawn_task(self.gid_batches, _process)
+                    'Connection aborted during batch processing.')
+                return
+            self.rpc.socket_queue.put(results)
+            self._log_info(
+                u'Sent batch response: ' + six.text_type(results))
+        else:
+            self._log_info(u'Notification-only batch processed.')
+        # FIXME
+        #if not rfs.close_after_response_requested:
+        #    for nthread in [t for t in nthreads if t]:
+        #        nthread.join()
+        if rfs.close_after_response_requested:
+            self.rpc.close()
+            self._log_info(
+                u'RPC closed due to invocation by Request or '
+                u'Notification handler.')
 
     def _handle_batch_response(self, msgs):
         def _extract_msg_content(msg):
@@ -306,20 +293,20 @@ class Dispatcher(object):
         rpcd = self.rpc.definitions
         dispatch = {
             dict: [
-                (rpcd.is_request, self._handle_request),
-                (rpcd.is_notification, self._handle_notification),
-                (rpcd.is_response, self._handle_response),
-                (rpcd.is_nil_id_error_response, self._log_error),
+                (rpcd.is_request, self._handle_request, self.gid_handlers),
+                (rpcd.is_notification, self._handle_notification, self.gid_handlers),
+                (rpcd.is_response, self._handle_response, None),
+                (rpcd.is_nil_id_error_response, self._log_error, None),
             ],
             list: [
-                (rpcd.is_batch_request, self._dispatch_batch),
-                (rpcd.is_batch_response, self._handle_batch_response),
+                (rpcd.is_batch_request, self._dispatch_batch, self.gid_batches),
+                (rpcd.is_batch_response, self._handle_batch_response, None),
             ]
         }
-        for match_fn, handler_fn in dispatch.get(type(msg), []):
+        for match_fn, handler_fn, task_category in dispatch.get(type(msg), []):
             if match_fn(msg):
-                return handler_fn
-        return self._handle_schema_error
+                return handler_fn, task_category
+        return self._handle_schema_error, None
 
     def run(self):
         self._log_info(u'Start RPC message dispatcher.')
@@ -332,7 +319,11 @@ class Dispatcher(object):
                 if isinstance(msg, Exception):
                     self._handle_parse_error(msg)
                 else:
-                    self._resolve_message_handler(msg)(msg)
+                    handler, task_category = self._resolve_message_handler(msg)
+                    if task_category:
+                        self._tasking.spawn_task(task_category, handler, msg)
+                    else:
+                        handler(msg)
             except Exception as e:
                 self._log_error(e)
         self._log_info(u'Exit RPC message dispatcher.')
