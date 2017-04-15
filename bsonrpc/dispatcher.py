@@ -121,6 +121,14 @@ class Dispatcher(object):
             return (spec.keywords is not None or not extras_present)
         else:
             return (len(required_args) == 0)
+        
+    def _post_processing(self, rfs):
+        if rfs.aborted:
+            self._log_info(u'Connection aborted in request handler.')
+        elif rfs.close_after_response_requested:
+            self.rpc.close()
+            self._log_info(
+                u'RPC closed due to invocation by Request/Notification handler.')
 
     def _execute_request(self, msg, rfs):
         msg_id = msg['id']
@@ -141,52 +149,45 @@ class Dispatcher(object):
             return self.rpc.definitions.error_response(
                 msg_id, RpcErrors.server_error, six.text_type(e))
 
-    def _handle_request(self, msg):
-        self._log_info(u'Received request: ' + six.text_type(msg))
-        rfs = RpcForServices(self.rpc)
+    def _handle_request(self, msg, rfs=None):
+        self._log_info(u'Handle request: ' + six.text_type(msg))
+        within_batch = (rfs is not None)
+        if not rfs:
+            rfs = RpcForServices(self.rpc)
         response = self._execute_request(msg, rfs)
-        if rfs.aborted:
-            self._log_info(u'Connection aborted in request handler.')
-            return
-        self.rpc.socket_queue.put(response)
-        self._log_info(u'Sent response: ' + six.text_type(response))
-        if rfs.close_after_response_requested:
-            self.rpc.close()
-            self._log_info(
-                u'RPC closed due to invocation by Request handler.')
-
-    def _handle_batch_request(self, msg, rfs):
-        self._log_info(u'Handling batch request: ' + six.text_type(msg))
-        response = self._execute_request(msg, rfs)
-        self._log_info(
-            u'Generated batch response: ' + six.text_type(response))
+        if not within_batch:
+            if not rfs.aborted:
+                self.rpc.socket_queue.put(response)
+                self._log_info(u'Sent response: ' + six.text_type(response))
+            self._post_processing(rfs)
         return response
 
-    def _execute_notification(self, msg, rfs, after_effects):
+    def _handle_notification(self, msg, rfs=None):
+        self._log_info(u'Handle notification: ' + six.text_type(msg))
+        within_batch = (rfs is not None)
+        if not rfs:
+            rfs = RpcForServices(self.rpc)
         method_name = msg['method']
         args, kwargs = self._get_params(msg)
-        method = self.rpc.services._notification_handlers.get(method_name)
-        if method:
-            try:
-                self._log_info(
-                    u'Received notification: ' + six.text_type(msg))
-                method(self.rpc.services, rfs, *args, **kwargs)
-            except Exception as e:
-                self._log_error(e)
-            if (after_effects and not rfs.aborted and
-                    rfs.close_after_response_requested):
-                self.rpc.close()
-                self._log_info(
-                    u'RPC closed due to invocation by '
-                    u'Notification handler.')
-        else:
-            self._log_error(
-                u'Unrecognized notification from peer: ' +
-                six.text_type(msg))
-
-    def _handle_notification(self, msg):
-        rfs = RpcForServices(self.rpc)
-        self._execute_notification(msg, rfs, True)
+        try:
+            method = self.rpc.services._notification_handlers.get(method_name)
+            if method:
+                if not self._is_compatible(method, args, kwargs):
+                    self._log_error(
+                        u'Notification method %s called with incompatible '
+                        u'arguments: %s %s' % 
+                        (method_name, six.text_type(args),
+                         six.text_type(kwargs)))
+                else:
+                    method(self.rpc.services, rfs, *args, **kwargs)
+                    if not within_batch:
+                        self._post_processing(rfs)
+            else:
+                self._log_error(
+                    u'Unrecognized notification from peer: ' +
+                    six.text_type(msg))
+        except Exception as e:
+            self._log_error(e)
 
     def _handle_response(self, msg):
         msg_id = msg['id']
@@ -206,15 +207,12 @@ class Dispatcher(object):
         self._log_info(u'Received batch: ' + six.text_type(msgs))
         rfs = RpcForServices(self.rpc)
         promises = []
-        #nthreads = []
         for msg in msgs:
             if 'id' in msg:
-                promises.append(self._tasking.spawn_task(self.gid_handlers, self._handle_batch_request, msg, rfs))
-                #promises.append(self._handle_batch_request(msg, rfs))
+                promises.append(self._tasking.spawn_task(self.gid_handlers, self._handle_request, msg, rfs))
             else:
-                self._tasking.spawn_task(self.gid_handlers, self._execute_notification, msg, rfs, False)
-                #nthreads.append(
-                #    self._execute_notification(msg, rfs, False))
+                self._tasking.spawn_task(self.gid_handlers, self._handle_notification, msg, rfs)
+        # FIXME mapping a wait not good -> tasker needs .all() and .any()
         results = list(map(lambda p: p.wait(), promises))
         results = list(map(lambda x: x.left, results))
         if results:
@@ -227,7 +225,7 @@ class Dispatcher(object):
                 u'Sent batch response: ' + six.text_type(results))
         else:
             self._log_info(u'Notification-only batch processed.')
-        # FIXME
+        # FIXME do this with tasker:
         #if not rfs.close_after_response_requested:
         #    for nthread in [t for t in nthreads if t]:
         #        nthread.join()
