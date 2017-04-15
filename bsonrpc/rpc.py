@@ -71,13 +71,13 @@ class RpcBase(DefaultOptionsMixin):
 
         def _send_request(msg_id):
             try:
-                promise = self.dispatcher.register(msg_id)
+                promise = self.dispatcher.register_expect_response(msg_id)
                 self.socket_queue.put(
                     self.definitions.request(
                         msg_id, method_name, args, kwargs))
                 return promise
             except Exception as e:
-                self.dispatcher.unregister(msg_id)
+                self.dispatcher.deregister_expect_response(msg_id)
                 raise e
 
         msg_id = six.next(self.id_generator)
@@ -85,8 +85,9 @@ class RpcBase(DefaultOptionsMixin):
         try:
             result = promise.wait(timeout)
         except RuntimeError:
-            self.dispatcher.unregister(msg_id)
+            self.dispatcher.deregister_expect_response(msg_id)
             raise ResponseTimeout(u'Waiting response expired.')
+        self.dispatcher.deregister_expect_response(msg_id)
         if isinstance(result, Exception):
             raise result
         return result
@@ -371,11 +372,11 @@ class JSONRpc(RpcBase):
 
         def _send_batch_expect_response(request_ids, batch):
             try:
-                promise = self.dispatcher.register(tuple(request_ids))
+                promise = self.dispatcher.register_expect_batch_response(tuple(request_ids))
                 self.socket_queue.put(batch)
                 return promise
             except Exception as e:
-                self.dispatcher.unregister(tuple(request_ids))
+                self.dispatcher.deregister_expect_batch_response(tuple(request_ids))
                 raise e
 
         if isinstance(batch_calls, BatchBuilder):
@@ -401,8 +402,9 @@ class JSONRpc(RpcBase):
         try:
             results = promise.wait(timeout)
         except RuntimeError:
-            self.dispatcher.unregister(tuple(request_ids))
+            self.dispatcher.deregister_expect_batch_response(tuple(request_ids))
             raise ResponseTimeout(u'Timeout for waiting batch result.')
+        self.dispatcher.deregister_expect_batch_response(tuple(request_ids))
         if isinstance(results, Exception):
             raise results
         return results

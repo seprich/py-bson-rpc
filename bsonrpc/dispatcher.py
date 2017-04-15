@@ -75,27 +75,29 @@ class Dispatcher(object):
     def _log_error(self, msg, *args, **kwargs):
         logging.error(self.conn_label + six.text_type(msg), *args, **kwargs)
 
-    #### <BOOKKEEPERS>
-    def register(self, msg_id):
+    def register_expect_response(self, msg_id):
         promise = new_promise(self.rpc.threading_model)
-        if isinstance(msg_id, tuple):
-            self._batch_responses[msg_id] = promise
-        else:
-            self._responses[msg_id] = promise
+        self._responses[msg_id] = promise
         return promise
-
-    def unregister(self, msg_id):
-        if isinstance(msg_id, tuple):
-            promise = self._batch_responses.get(msg_id)
-            if msg_id in self._batch_responses:
-                del self._batch_responses[msg_id]
-        else:
-            promise = self._responses.get(msg_id)
-            if msg_id in self._responses:
-                del self._responses[msg_id]
-        if promise and not promise.is_set():
-            promise.set(BsonRpcError('Timeout'))
-    #### </BOOKKEEPERS>
+    
+    def deregister_expect_response(self, msg_id):
+        if msg_id in self._responses:
+            promise = self._responses[msg_id]
+            del self._responses[msg_id]
+            if not promise.is_set():
+                promise.set(BsonRpcError(u'Timeout'))
+                
+    def register_expect_batch_response(self, msg_ids_tuple):
+        promise = new_promise(self.rpc.threading_model)
+        self._batch_responses[msg_ids_tuple] = promise
+        return promise
+            
+    def deregister_expect_batch_response(self, msg_ids_tuple):
+        if msg_ids_tuple in self._batch_responses:
+            promise = self._batch_responses[msg_ids_tuple]
+            del self._batch_responses[msg_ids_tuple]
+            if not promise.is_set():
+                promise.set(BsonRpcError(u'Timeout'))
     
     def _get_params(self, msg):
         if 'params' not in msg:
@@ -202,7 +204,6 @@ class Dispatcher(object):
                 u'Unrecognized/expired response from peer: ' +
                 six.text_type(msg))
 
-    
     def _dispatch_batch(self, msgs):
         self._log_info(u'Received batch: ' + six.text_type(msgs))
         rfs = RpcForServices(self.rpc)
