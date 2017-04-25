@@ -16,6 +16,32 @@ from bsonrpc.util import BatchBuilder, PeerProxy
 __license__ = 'http://mozilla.org/MPL/2.0/'
 
 
+class ResultScope(object):
+
+    def __init__(self, dispatcher, msg_id):
+        self.dispatcher = dispatcher
+        self.msg_id = msg_id
+
+    def __enter__(self):
+        return self.dispatcher.register_expect_response(self.msg_id)
+
+    def __exit__(self, et, ev, tb):
+        self.dispatcher.deregister_expect_response(self.msg_id)
+
+
+class BatchResultScope(object):
+
+    def __init__(self, dispatcher, request_ids):
+        self.dispatcher = dispatcher
+        self.request_ids = tuple(request_ids)
+
+    def __enter__(self):
+        return self.dispatcher.register_expect_batch_response(self.request_ids)
+
+    def __exit__(self, et, ev, tb):
+        self.dispatcher.deregister_expect_batch_response(self.request_ids)
+
+
 class RpcBase(DefaultOptionsMixin):
 
     def __init__(self, socket_queue, services, **options):
@@ -68,29 +94,17 @@ class RpcBase(DefaultOptionsMixin):
             del kwargs[to_keys[0]]
         else:
             timeout = None
-
-        def _send_request(msg_id):
-            try:
-                promise = self.dispatcher.register_expect_response(msg_id)
-                self.socket_queue.put(
-                    self.definitions.request(
-                        msg_id, method_name, args, kwargs))
-                return promise
-            except Exception as e:
-                self.dispatcher.deregister_expect_response(msg_id)
-                raise e
-
         msg_id = six.next(self.id_generator)
-        promise = _send_request(msg_id)
-        try:
-            result = promise.wait(timeout)
-        except RuntimeError:
-            self.dispatcher.deregister_expect_response(msg_id)
-            raise ResponseTimeout(u'Waiting response expired.')
-        self.dispatcher.deregister_expect_response(msg_id)
-        if isinstance(result, Exception):
-            raise result
-        return result
+        with ResultScope(self.dispatcher, msg_id) as promise:
+            self.socket_queue.put(
+                self.definitions.request(msg_id, method_name, args, kwargs))
+            try:
+                result = promise.wait(timeout)
+            except RuntimeError:
+                raise ResponseTimeout(u'Waiting response expired.')
+            if isinstance(result, Exception):
+                raise result
+            return result
 
     def invoke_notification(self, method_name, *args, **kwargs):
         '''
@@ -370,15 +384,6 @@ class JSONRpc(RpcBase):
                     u'Malformed batch call: ' + six.text_type(e))
             return request_ids, batch
 
-        def _send_batch_expect_response(request_ids, batch):
-            try:
-                promise = self.dispatcher.register_expect_batch_response(tuple(request_ids))
-                self.socket_queue.put(batch)
-                return promise
-            except Exception as e:
-                self.dispatcher.deregister_expect_batch_response(tuple(request_ids))
-                raise e
-
         if isinstance(batch_calls, BatchBuilder):
             batch_calls = batch_calls._batch_calls
         if not batch_calls:
@@ -398,13 +403,12 @@ class JSONRpc(RpcBase):
             self.socket_queue.put(batch)
             return None
         # At least one request in the batch:
-        promise = _send_batch_expect_response(request_ids, batch)
-        try:
-            results = promise.wait(timeout)
-        except RuntimeError:
-            self.dispatcher.deregister_expect_batch_response(tuple(request_ids))
-            raise ResponseTimeout(u'Timeout for waiting batch result.')
-        self.dispatcher.deregister_expect_batch_response(tuple(request_ids))
-        if isinstance(results, Exception):
-            raise results
-        return results
+        with BatchResultScope(self.dispatcher, request_ids) as promise:
+            self.socket_queue.put(batch)
+            try:
+                results = promise.wait(timeout)
+            except RuntimeError:
+                raise ResponseTimeout(u'Timeout for waiting batch result.')
+            if isinstance(results, Exception):
+                raise results
+            return results
