@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. This change
 
 ## [unreleased]
 
+## [0.2.1] - 2017-05-08
+### Fixes
+- Fix a memory leak issue.
+
 ## [0.2.0] - 2017-03-22
 ### Added
 - Automatic support for both pymongo and pybson bson codecs

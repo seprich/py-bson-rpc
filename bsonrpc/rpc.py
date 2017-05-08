@@ -16,6 +16,19 @@ from bsonrpc.util import BatchBuilder, PeerProxy
 __license__ = 'http://mozilla.org/MPL/2.0/'
 
 
+class ResultScope(object):
+    
+    def __init__(self, dispatcher, msg_id):
+        self.dispatcher = dispatcher
+        self.msg_id = msg_id
+    
+    def __enter__(self):
+        return self.dispatcher.register(self.msg_id)
+    
+    def __exit__(self, tp, value, tb):
+        self.dispatcher.unregister(self.msg_id)
+
+
 class RpcBase(DefaultOptionsMixin):
 
     def __init__(self, socket, codec, services=None, **options):
@@ -70,24 +83,14 @@ class RpcBase(DefaultOptionsMixin):
             del kwargs[to_keys[0]]
         else:
             timeout = None
-
-        def _send_request(msg_id):
-            try:
-                promise = self.dispatcher.register(msg_id)
+        msg_id = six.next(self.id_generator)
+        try:
+            with ResultScope(self.dispatcher, msg_id) as promise:
                 self.socket_queue.put(
                     self.definitions.request(
                         msg_id, method_name, args, kwargs))
-                return promise
-            except Exception as e:
-                self.dispatcher.unregister(msg_id)
-                raise e
-
-        msg_id = six.next(self.id_generator)
-        promise = _send_request(msg_id)
-        try:
-            result = promise.wait(timeout)
+                result = promise.wait(timeout)
         except RuntimeError:
-            self.dispatcher.unregister(msg_id)
             raise ResponseTimeout(u'Waiting response expired.')
         if isinstance(result, Exception):
             raise result
@@ -370,15 +373,6 @@ class JSONRpc(RpcBase):
                     u'Malformed batch call: ' + six.text_type(e))
             return request_ids, batch
 
-        def _send_batch_expect_response(request_ids, batch):
-            try:
-                promise = self.dispatcher.register(tuple(request_ids))
-                self.socket_queue.put(batch)
-                return promise
-            except Exception as e:
-                self.dispatcher.unregister(tuple(request_ids))
-                raise e
-
         if isinstance(batch_calls, BatchBuilder):
             batch_calls = batch_calls._batch_calls
         if not batch_calls:
@@ -398,11 +392,11 @@ class JSONRpc(RpcBase):
             self.socket_queue.put(batch)
             return None
         # At least one request in the batch:
-        promise = _send_batch_expect_response(request_ids, batch)
         try:
-            results = promise.wait(timeout)
+            with ResultScope(self.dispatcher, tuple(request_ids)) as promise:
+                self.socket_queue.put(batch)
+                results = promise.wait(timeout)
         except RuntimeError:
-            self.dispatcher.unregister(tuple(request_ids))
             raise ResponseTimeout(u'Timeout for waiting batch result.')
         if isinstance(results, Exception):
             raise results
