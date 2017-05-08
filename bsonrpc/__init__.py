@@ -12,7 +12,7 @@ from bsonrpc.rpc import BSONRpc, JSONRpc
 from bsonrpc.util import BatchBuilder
 
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 __license__ = 'http://mozilla.org/MPL/2.0/'
 
