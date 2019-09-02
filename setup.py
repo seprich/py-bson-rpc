@@ -41,6 +41,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     keywords='bson json rpc bson-rpc json-rpc bsonrpc jsonrpc gevent',
     packages=find_packages(exclude=['contrib', 'doc', 'tests']),
